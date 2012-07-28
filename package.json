@@ -12,7 +12,7 @@
     , "socket.io" : "*"
     , "request" : "*"
     , "temp" : "*"
-    , "connect-mongo" : ">=0.8.4"
+    , "connect-mongo" : "1.1.x"
   }
   , "engines" : {
       "node" : "0.8.x",
