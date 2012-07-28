@@ -8,7 +8,6 @@
     , "temp" : "*"
     , "mongoose" : "*"
     , "mongoose-attachments" : "0.0.x"
-    , "aws2js" : "0.2.x"
     , "socket.io" : "*"
     , "request" : "*"
     , "temp" : "*"
