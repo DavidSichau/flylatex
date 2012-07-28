@@ -12,4 +12,8 @@
     , "temp" : "*"
     , "connect-mongo" : "*"
   }
+  , "engines" : {
+    "node" : "0.8.x"
+    , "npm" : "*"
+  } 
 }
