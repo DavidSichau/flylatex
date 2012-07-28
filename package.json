@@ -7,7 +7,7 @@
     , "share" : "0.5.0"
     , "temp" : "*"
     , "mongoose" : "*"
-    , "mongoose-attachments" : ">= 0.2.2"
+    , "mongoose-attachments" : "0.0.x"
     , "socket.io" : "*"
     , "request" : "*"
     , "temp" : "*"
