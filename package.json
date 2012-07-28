@@ -9,6 +9,7 @@
     , "temp" : "*"
     , "mongoose" : "*"
     , "mongoose-attachments" : "*"
+    , "socket.io" : "*"
   }
   , "engines" : {
       "node" : "0.6.x",
