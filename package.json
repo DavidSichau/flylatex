@@ -11,6 +11,7 @@
     , "request" : "*"
     , "temp" : "*"
     , "connect-mongo" : "*"
+    , "mongoose-attachments": "*"
   }
   , "engines" : {
     "node" : "0.8.x"
