@@ -6,7 +6,12 @@ It includes a beautiful LaTeX ACE Editor and a PDF renderer.
 
 Setup
 -----
-To install Fly Latex
+To install FlyLatex, first clone the repository: `git clone https://github.com/alabid/flylatex.git`
+
+To use FlyLatex, you must have `node` and `npm` installed. So if you haven't already
+installed node (for nodejs) and npm (the node package manager), do so before moving on.
+
+`cd` into the 
 
 Usage
 -----
