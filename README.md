@@ -80,7 +80,7 @@ You should see a command-line message telling you the port number on which the a
     
 If you don't have the foreman gem installed, start the app via:
    
-   node app.js
+      node app.js
 
 So I had to visit `http://localhost:5000`. Yours might be different. Watch out.
 
