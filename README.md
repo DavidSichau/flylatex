@@ -1,7 +1,7 @@
 FlyLatex
 ========
 
-FlyLatex is a Real Time Collaborative Environment for LaTeX built in nodejs.
+FlyLatex is a real-time collaborative environment for LaTeX built in nodejs.
 It includes a beautiful LaTeX ACE Editor and a PDF renderer. 
 
 FlyLatex gives you:
@@ -14,9 +14,9 @@ FlyLatex gives you:
 
 * Easy LateX Debugging Online
 
-* Easy Manipulation of Compiled PDF
+* Easy Manipulation of Compiled PDFs
 
-* Easy Sharing of PDF
+* Easy Sharing of PDFs
 
 * An Open Source product that's easy to Customize
 
