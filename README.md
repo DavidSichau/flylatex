@@ -96,7 +96,7 @@ Daniel Alabi
 
 Version
 -------
-0.5.0-Beta
+0.5.0
 
 MIT Open Source License
 -----------------------
