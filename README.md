@@ -69,7 +69,7 @@ You'd have to first start the `mongo` daemon using the command
 path.
 
 Then `cd` into the directory (if you aren't already there) and run the command
- `foreman start`. This should invoke the `Procfile` in that directory and start 
+ `foreman start`. This should invoke the `Procfile` in that directory (if you have the foreman gem installed) and start 
 the server via:
 
     web: node app.js
@@ -78,6 +78,10 @@ You should see a command-line message telling you the port number on which the a
 
     20:38:10 web.1     | Express server listening on port 5000 in development mode
     
+If you don't have the foreman gem installed, start the app via:
+   
+   node app.js
+
 So I had to visit `http://localhost:5000`. Yours might be different. Watch out.
 
 
