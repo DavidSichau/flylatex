@@ -50,8 +50,8 @@ your LaTeX documents.
 
 	var config = {
 	    pdfs: {
-	    	// for example, path: "/Users/alabid/flylatex/blank"
-		// defaults to "pdfs" directory in "flylatex" repo
+	    	  // for example, path: "/Users/alabid/flylatex/blank"
+		  // defaults to "pdfs" directory in "flylatex" repo
 	        path: ""
 	    }
 	    , db: {
