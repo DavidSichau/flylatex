@@ -70,7 +70,7 @@ Then run the command `npm install -d` to install all the dependencies for the
 FlyLatex nodejs app. This should take only a few minutes.
 
 For more information on how to setup FlyLatex on Ubuntu, see
-(http://kaanaksit.wordpress.com/2013/05/10/en-how-to-use-and-install-flylatex-on-ubuntu/)[this].
+(this)[http://kaanaksit.wordpress.com/2013/05/10/en-how-to-use-and-install-flylatex-on-ubuntu/]
 
 Usage
 -----
