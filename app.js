@@ -9,6 +9,7 @@ var express = require('express')
 , app = module.exports = express.createServer()
 , sharejs = require('share').server
 , routes = require('./routes') 
+, configs = require('./configs')
 , MongoStore = require('connect-mongo')(express);
 
 
@@ -22,9 +23,7 @@ app.configure(function(){
     app.use(express.cookieParser());
     app.use(express.session({
 	secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
-	store: new MongoStore({
-	    db: "user-auth"
-	})
+        store: new MongoStore(configs.db)
     }));
     app.use(app.router);
     app.use(express.static(__dirname + '/public'));
