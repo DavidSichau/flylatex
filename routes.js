@@ -1435,11 +1435,6 @@ exports.saveDocument = function(req, res) {
 	    newLine.data = new Buffer(documentText.slice(0, maxDocLine));
 	    newLine.lastModified = new Date();
 	    
-	    newLine.save(function(err) {
-		if (!err) 
-		    console.log("new line saved successfully!");
-	    });
-	    
 	    doc.lines[lineNum] = newLine;
     
 	    documentText = documentText.slice(maxDocLine);
@@ -1532,8 +1527,6 @@ var createNewDocument = function(docName, currentUser) {
     for (var key in newDocLineObj) {
 	newDocLine[key] = newDocLineObj[key];
     }
-    // save the document line
-    newDocLine.save();
     
     // create the document (with some properties)
     var newDoc = new Document();
