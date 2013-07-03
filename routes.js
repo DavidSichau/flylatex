@@ -129,7 +129,7 @@ exports.preIndex = function(req, res, next) {
 			  
 			  // user authenticated! Can go in
 			  loadUser(user, function(err, loadedUser){
-    		      console.log("loaded user " + loadedUser.username)
+    		      console.log("loaded user " + loadedUser.currentUser)
 			      for (key in loadedUser) {
 			          req.session[key] = loadedUser[key];
 			      }
@@ -795,155 +795,85 @@ exports.getMessages = function(req, res) {
  * @param res: response object
  */
 exports.grantAccess = function(req, res) {
-    var response = {errors: [], infos:[]}
-    
+    var response = {
+        errors: [],
+        infos: []
+    }
+
+    console.log("grantAccess called");
     /**
      * options passed in: userToGrant, documentId, documentName, access
      */
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
-	response.errors.push("You cannot grant access since you are not logged in.");
-	res.json(response);
-	return;
+        response.errors.push("You cannot grant access since you are not logged in.");
+        res.json(response);
+        return;
     }
-    
-    User.findOne({"userName":req.body.userToGrant}, function(err, user) {
-	if (err || !user) {
-	    response.errors.push("No user " + req.body.userToGrant + " exists or an error occured while looking for this user");
-	    res.json(response);
-	} else {
-	    // make sure the user's granting at least read access 
-	    if (req.body.access < 4) {
-		response.errors. push("You should grant a user at least 'Read' privilge");
-		res.json(response);
-		return;
-	    }
-	    
-	    // first make sure that userToGrant doesn't already have some access
-	    // to the document
-	    var userHasDoc = false;
-	    
-	    user.documentsPriv.forEach(function(item, index) {
-		if (item.documentId == req.body.documentId) {
-		    userHasDoc = true;
-		}
-	    });
 
-	    var priv = req.body.access
-	    , readAccess = false
-	    , writeAccess = false
-	    , execAccess = false
-	    , canShare = false;
+    User.findOne({
+        "userName": req.body.userToGrant
+    }, function(err, user) {
+        if (err || !user) {
+            response.errors.push("No user " + req.body.userToGrant + " exists or an error occured while looking for this user");
+            res.json(response);
+        }
+        else {
+            // make sure the user's granting at least read access 
+            if (req.body.access < 4) {
+                response.errors.push("You should grant a user at least 'Read' privilge");
+                res.json(response);
+                return;
+            }
+            console.log("access level: " + req.body.access);
 
-	    // give user power to be able to share the document with other users
-	    // if he/she has full access
-	    if (priv == 7) {
-		canShare = true;
+            var priv = getPrivileges(parseInt(req.body.access));
 
-		// give user R, W, X access
-		giveUserSharePower(req.body.userToGrant, req.body.documentId);
-	    }
+            if (priv.canShare) {
+                // give user R, W, X access
+                giveUserSharePower(req.body.userToGrant, req.body.documentId);
+            }
 
-	    // de-couple privileges here
-	    if (priv >= 4) {
-		readAccess = true;
-		priv -= 4;
-	    }
-	    if (priv >= 2) {
-		writeAccess = true;
-		priv -= 2;
-	    }
-	    if (priv == 1) {
-		execAccess = true;
-	    }
+            // create new user document
+            var newUserDocument = {
+                "id": req.body.documentId,
+                "name": req.body.documentName,
+                "readAccess": priv.readAccess,
+                "writeAccess": priv.writeAccess,
+                "execAccess": priv.execAccess,
+                "canShare": priv.canShare,
+                "forUser": req.body.userToGrant
+            };
+            console.log("new user doc: " + newUserDocument.id);
 
-	    // create new user document
-	    var newUserDocument = {
-		"id": req.body.documentId
-		, "name": req.body.documentName
-		, "readAccess" : readAccess
-		, "writeAccess" : writeAccess
-		, "execAccess" : execAccess
-		, "canShare" : canShare
-		, "forUser" : req.body.userToGrant
-	    };
-	    
-	    
-	    if (userHasDoc) {
-		var upgrading = false;
-		
-		// if userToShare already has the document, upgrade access if possible
-		for (var i = 0; i < user.documentsPriv.length; i++) {
-		    if (user.documentsPriv[i].documentId == newUserDocument.id
-		       && user.documentsPriv[i].access < req.body.access) {
-			upgrading = true;
-
-			// userToShare should reload his/her list of documents
-			response.reloadDocs = true;
-
-			user.documentsPriv[i].access = parseInt(req.body.access);
-			
-			user.save(function(err) {
-			    if (!err) 
-				console.log("user successfully saved!");
-			    else
-				console.log("error occured while trying to save user");
-			});
-			
-			// send back message
-			response.infos.push("You just upgraded the privileges of "
-					   + req.body.userToGrant + " for the document "
-					   + req.body.documentName);
-
-			// notify userToShare you just upgraded his privileges on some document
-			io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
-			res.json(response);
-	    
-			break;		
-		    }
-		}
-		if (!upgrading) {
-		    // send back duplicate message
-		    response.infos.push(req.body.userToGrant + " already has higher or equal access to the document, " + req.body.documentName);
-		    res.json(response);
-		}
-	    } else {
-		// userToShare should definitely redisplay his list of documents
-		response.reloadDocs = true;
-		
-		var newDocPriv = new DocPrivilege();
-		newDocPriv.access = parseInt(req.body.access);
-		newDocPriv.documentName = req.body.documentName;
-		newDocPriv.documentId = req.body.documentId;
-		
-		// save
-		newDocPriv.save();
-	    
-		// save to user's list of document privileges
-		user.documentsPriv.push(newDocPriv);
-		user.save(); // save user
-
-		
-		response.infos.push("You just granted "+req.body.userToGrant+" "+
-				    (readAccess ? "Read" +
-				     ((!writeAccess && !execAccess) 
-				      ? " ": ", ") :"")+
-				    (writeAccess ? "Write" +
-				     (!execAccess ? " ": ", ") : "") +
-				    (execAccess ? "Exec " : " ") +
-				    "Access to " + req.body.documentName);
-		
-		// notify the user just granted access that his/her request
-		// has been granted immediately via socket.io
-		io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
-
-		
-		// send response
-		res.json(response);
-	    }	
-	}
+            // this method either updates or inserts the new object
+            DocPrivilege.update({
+                _id: {
+                    $in: user.documentsPriv
+                },
+                documentId: req.body.documentId,
+                access: {$lte: parseInt(req.body.access)} 
+            }, {
+                $set: {
+                    access: parseInt(req.body.access),
+                    documentName: req.body.documentName,
+                    documentId: req.body.documentId
+                }
+            }, {
+                upsert: true
+            }, function(err, updated) {
+                if (err || !updated) console.log("User not updated");
+                else {
+                    console.log("User updated");
+                    response.reloadDocs = true;
+                    response.infos.push("You just upgraded the privileges of " + req.body.userToGrant + " for the document " + req.body.documentName);
+                    io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
+                    res.json(response);
+                }
+            }); 
+        }
     });
 };
-
+		    
 /**
  * acceptAccess ->
  * accept another user's offer to have  
@@ -1586,10 +1516,24 @@ var loadUser = function(user, callback) {
     // user document to send off to front end for display
     var userDocument = {}, priv;
 
-    var count = user.documentsPriv.length;
-    var processed = 0;
+    loadDocuments(user.documentsPriv, function(err, userDocuments){
+        obj.userDocuments = userDocuments;
+        callback(false, obj);
+    })
+}
 
-    user.documentsPriv.forEach(function(item, i) {
+/*
+ * Helper function to load all documents of one user
+ * The callback returns as first parameter the error
+ * The second parameter is the list of documents
+ */
+var loadDocuments = function(documentsPriv, callback) {
+    var userDocuments = [];
+    var count = documentsPriv.length;
+    //no documents for the user return
+    if(count === 0) callback(false,userDocuments);
+    var processed = 0;
+    documentsPriv.forEach(function(item, i) {
         DocPrivilege.findOne({
             _id: item
         }, function(err, docPriv) {
@@ -1598,7 +1542,7 @@ var loadUser = function(user, callback) {
                 console.log(err);
                 return;
             }
-            if (!docPriv || typeof docPriv.loadDocument != "function") {
+            if (!docPriv) {
                 // is user even in db ? 
                 console.log("error", "There's no document with id " + item + " in our database");
                 return;
@@ -1609,51 +1553,63 @@ var loadUser = function(user, callback) {
                 for (key in userDoc) {
                     userDocument[key] = userDoc[key];
                 }
-                obj.userDocuments.push(userDocument);
+                userDocuments.push(userDocument);
             }
             // make sure that all documents are loaded
             if (++processed == count) {
-                callback(false , obj);
+                callback(false , userDocuments);
             }
         });
     });
+    
 }
 
-
-
+/*
+ * Helper function to load on single document from the docPriv
+ */
 var loadDocument = function(docPriv) {
     var userDocument = {};
-    var priv;
-
+    // var priv;
     userDocument.id = docPriv.documentId;
     userDocument.name = docPriv.documentName;
-    // set defaults here
-    userDocument.readAccess = false;
-    userDocument.writeAccess = false;
-    userDocument.execAccess = false;
-    userDocument.canShare = false;
-
-    // set privileges here
-    priv = docPriv.access;
-
-    if (priv >= 4) {
-        userDocument.readAccess = true;
-        priv -= 4;
-    }
-    if (priv >= 2) {
-        userDocument.writeAccess = true;
-        priv -= 2;
-    }
-    if (priv == 1) {
-        userDocument.execAccess = true;
-    }
-
-    // if user has R, W, X access, he can share the document
-    // else he cannot
-    if (docPriv.access == 7) {
-        userDocument.canShare = true;
+    userDocument.access = docPriv.access;
+    
+    var priv = getPrivileges(docPriv.access);
+    for(var key in priv) {
+        userDocument[key] = priv[key];
     }
     return userDocument;
+}
+
+/*
+ * Helper function to calculate the privileges depeinding on number
+ */
+var getPrivileges = function(accessCount) {
+    var priv_ = accessCount;
+    var access = {
+        canShare: false,
+        readAccess: false,
+        writeAccess: false,
+        execAccess: false
+    };
+    
+    // if user has R, W, X access, he can share the document
+    // else he cannot
+    if (priv_ == 7) {
+        access.canShare = true;            
+    }
+    if (priv_ >= 4) {
+        access.readAccess = true;
+        priv_ -= 4;
+    }
+    if (priv_ >= 2) {
+        access.writeAccess = true;
+        priv_ -= 2;
+    }
+    if (priv_ == 1) {
+        access.execAccess = true;
+    }
+    return access;
 }
 
 /**
