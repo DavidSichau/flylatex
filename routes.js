@@ -867,7 +867,7 @@ exports.grantAccess = function(req, res) {
                 else {
                     response.infos.push("You just granted " + req.body.userToGrant + "new privileges for the document " + req.body.documentName);
                 }
-                response.reloadDocs = true;
+                // response.reloadDocs = true;
                 io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
                 res.json(response);
             }); 
@@ -893,18 +893,18 @@ exports.acceptAccess = function(req, res) {
      * options passed in: acceptFromUser, documentId, documentName, access
      */    
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
-	response.errors.push("You cannot accept the invitation since you aren't logged in");
-	res.json(response);
-	return;
+	    response.errors.push("You cannot accept the invitation since you aren't logged in");
+	    res.json(response);
+	    return;
     }
 
     // make sure the privilege to accept is at least read privilege
     if (parseInt(req.body.access) < 4) {
-	response.errors.push("You should accept at least 'Read' privilege");
-	res.json(response);
+	    response.errors.push("You should accept at least 'Read' privilege");
+	    req.json(response);
     }
    
-    User.findOne({"userName":req.session.currentUser}, function(err, user) {
+    User.findOne({userName:req.session.currentUser}, function(err, user) {
 	// first make sure the user doesn't already have some access to the document
 	// in that case, bump up the user's access
 	var userHasDoc = false;
@@ -914,44 +914,83 @@ exports.acceptAccess = function(req, res) {
 	    }
 	});
 
-	var priv = req.body.access 
-	, readAccess = false
-	, writeAccess = false
-	, execAccess = false
-	, canShare = false;
+    var priv = getPrivileges(req.body.access);
 	// give user power to be able to share the document with other users
 	// if he/she has full access
-	if (priv == 7) {
-	    canShare = true;
-	    
+	if (priv.canShare) {
 	    // give user share power
 	    // a user can only get share access when he's given access of 7
 	    // which corresponds to R, W, X
 	    giveUserSharePower(req.session.currentUser, req.body.documentId);
 	}
-	
-	// de-couple privileges
-	if (priv >= 4) {
-	    readAccess = true;
-	    priv -= 4;
-	}
-	if (priv >= 2) {
-	    writeAccess = true;
-	    priv -= 2;
-	}
-	if (priv == 1) {
-	    execAccess = true;
-	}
-	
+
 	// new user document
 	var newUserDocument = {
-	    "id": req.body.documentId
-	    , "name": req.body.documentName
-	    , "readAccess" : readAccess
-	    , "writeAccess" : writeAccess
-	    , "execAccess" : execAccess
-	    , "canShare" : canShare
+	    id: req.body.documentId,
+	    name: req.body.documentName,
+	    readAccess: priv.readAccess,
+	    writeAccess: priv.writeAccess,
+	    execAccess: priv.execAccess,
+	    canShare: priv.canShare
 	};
+
+	// this method either updates or inserts the new object but only if access is larger than current
+	DocPrivilege.update({
+	    _id: {
+	        $in: user.documentsPriv
+	    },
+	    documentId: req.body.documentId,
+	    access: {
+	        $lt: parseInt(req.body.access)
+	    }
+	}, {
+	    $set: {
+	        access: parseInt(req.body.access),
+	        documentName: req.body.documentName,
+	        documentId: req.body.documentId
+	    }
+	}, {
+	    upsert: true
+	}, function(err, numberUpdated, rawData) {
+	    if (err) {
+	        console.log("Error occured during DocPiv update: " + err);
+	        response.infos.push("Error while upgrading privileges, please try again.");
+	    }
+	    if (rawData.updatedExisting) {
+	        response.infos.push("You just upgraded your rights to the document " + newUserDocument.name);
+            for (var i = 0; i < req.session.userDocuments.length; i++) {
+		        if (req.session.userDocuments[i].id == newUserDocument.id) {
+			        // upgrade all we've got
+			        req.session.userDocuments[i] = newUserDocument;
+		        }
+		    }
+	    }
+	    else {
+            console.log("generated new entry");
+            console.log(rawData);
+             // send acceptance message to user
+            response.infos.push("You just accepted "+
+				(priv.readAccess ? "Read" +
+				 ((!priv.writeAccess && !priv.execAccess) 
+				  ? " ": ", ") :"")+
+				(priv.writeAccess ? "Write" +
+				 (!priv.execAccess ? " ": ", ") : "") +
+				(priv.execAccess ? "Exec " : " ") +
+				"Access to " + req.body.documentName +
+				" from " + req.body.acceptFromUser);
+            user.documentsPriv.push(rawData.upserted);
+            user.save();
+            response.newDocument = newUserDocument;
+            req.session.userDocuments.push(newUserDocument);
+	    }
+	    response.reDisplay = true;
+	    res.json(response);
+	});
+
+
+	
+	
+/*
 
 	if (userHasDoc) {
 	    // if user already has the document, upgrade access if possible
@@ -1011,17 +1050,18 @@ exports.acceptAccess = function(req, res) {
 	    
 	    // send acceptance message to user
 	    response.infos.push("You just accepted "+
-				(readAccess ? "Read" +
-				 ((!writeAccess && !execAccess) 
+				(priv.readAccess ? "Read" +
+				 ((!priv.writeAccess && !priv.execAccess) 
 				  ? " ": ", ") :"")+
-				(writeAccess ? "Write" +
-				 (!execAccess ? " ": ", ") : "") +
-				(execAccess ? "Exec " : " ") +
+				(priv.writeAccess ? "Write" +
+				 (!priv.execAccess ? " ": ", ") : "") +
+				(priv.execAccess ? "Exec " : " ") +
 				"Access to " + req.body.documentName +
 				" from " + req.body.acceptFromUser);
 	    res.json(response);
-	}
+	}*/
     });
+    
 };
 
 /**
