@@ -1,7 +1,6 @@
 // ========================= Put socket.io logic here ==============================
 
-var socket = io.connect("http://localhost:5000/");
-
+var socket = io.connect();
 
 // handle the changedDocument event
 socket.on("changedDocument", function(docString) {
