@@ -811,7 +811,7 @@ exports.grantAccess = function(req, res) {
     }
 
     User.findOne({
-        "userName": req.body.userToGrant
+        userName: req.body.userToGrant
     }, function(err, user) {
         if (err || !user) {
             response.errors.push("No user " + req.body.userToGrant + " exists or an error occured while looking for this user");
@@ -824,10 +824,7 @@ exports.grantAccess = function(req, res) {
                 res.json(response);
                 return;
             }
-            console.log("access level: " + req.body.access);
-
             var priv = getPrivileges(parseInt(req.body.access));
-
             if (priv.canShare) {
                 // give user R, W, X access
                 giveUserSharePower(req.body.userToGrant, req.body.documentId);
@@ -835,23 +832,22 @@ exports.grantAccess = function(req, res) {
 
             // create new user document
             var newUserDocument = {
-                "id": req.body.documentId,
-                "name": req.body.documentName,
-                "readAccess": priv.readAccess,
-                "writeAccess": priv.writeAccess,
-                "execAccess": priv.execAccess,
-                "canShare": priv.canShare,
-                "forUser": req.body.userToGrant
+                id: req.body.documentId,
+                name: req.body.documentName,
+                readAccess: priv.readAccess,
+                writeAccess: priv.writeAccess,
+                execAccess: priv.execAccess,
+                canShare: priv.canShare,
+                forUser: req.body.userToGrant
             };
-            console.log("new user doc: " + newUserDocument.id);
 
-            // this method either updates or inserts the new object
+            // this method either updates or inserts the new object but only if access is larger than current
             DocPrivilege.update({
                 _id: {
                     $in: user.documentsPriv
                 },
                 documentId: req.body.documentId,
-                access: {$lte: parseInt(req.body.access)} 
+                access: {$lt: parseInt(req.body.access)} 
             }, {
                 $set: {
                     access: parseInt(req.body.access),
@@ -860,15 +856,20 @@ exports.grantAccess = function(req, res) {
                 }
             }, {
                 upsert: true
-            }, function(err, updated) {
-                if (err || !updated) console.log("User not updated");
-                else {
-                    console.log("User updated");
-                    response.reloadDocs = true;
-                    response.infos.push("You just upgraded the privileges of " + req.body.userToGrant + " for the document " + req.body.documentName);
-                    io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
-                    res.json(response);
+            }, function(err, numberUpdated, rawData) {
+                if (err) {
+                    console.log("Error occured during DocPiv update: " + err);
+                    response.infos.push("Error while upgrading privileges, please try again.");
                 }
+                if(rawData.updatedExisting) {
+                    response.infos.push("You just upgraded the privileges of " + req.body.userToGrant + " for the document " + req.body.documentName);
+                }
+                else {
+                    response.infos.push("You just granted " + req.body.userToGrant + "new privileges for the document " + req.body.documentName);
+                }
+                response.reloadDocs = true;
+                io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
+                res.json(response);
             }); 
         }
     });
@@ -882,6 +883,7 @@ exports.grantAccess = function(req, res) {
  * @param res: response object
  */
 exports.acceptAccess = function(req, res) {
+    console.log("accept Access called");
     var response = {errors:[], infos:[]
 		    , newDocument:null
 		    , reDisplay:false
