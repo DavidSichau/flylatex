@@ -7,7 +7,7 @@ var mongoose = require("mongoose")
 , Schema = mongoose.Schema
 , ObjectId = Schema.ObjectId
 , app = require("./app")
-, io = require("socket.io").listen(app)
+, io = require("socket.io").listen(app, {log:false})
 
 // load configurations here
 , configs = require("./configs")
@@ -128,12 +128,15 @@ exports.preIndex = function(req, res, next) {
 			  console.log("=============================================");
 			  
 			  // user authenticated! Can go in
-			  var loadedUser = loadUser(user);
-			  for (key in loadedUser) {
-			      req.session[key] = loadedUser[key];
-			  }
-			  
-			  next();
+			  loadUser(user, function(err, loadedUser){
+    		      console.log("loaded user " + loadedUser.username)
+			      for (key in loadedUser) {
+			          req.session[key] = loadedUser[key];
+			      }
+
+			      next();
+               
+			  });
 		      }
 		  });
     } else {
@@ -280,45 +283,47 @@ exports.processSignUpData = function(req, res) {
     }
     
     if (!isError) {
-	// there's no error. Save the new user
-	// only if someone else doesn't have his username
-	User.find({userName: newUser.userName}
-	      , function(err, users) {
-		  if (users.length > 0) {
-		      errors["userNameTaken"] = "The username " + newUser.userName + " is already taken";
-		      isError = true;
+        // there's no error. Save the new user
+        // only if someone else doesn't have his username
+        User.find({
+            userName: newUser.userName
+        }, function(err, users) {
+            if (users.length > 0) {
+                errors["userNameTaken"] = "The username " + newUser.userName + " is already taken";
+                isError = true;
 
-		      displayErrorsForSignUp(res, errors);
-		  } else {
-		      // save the user
-		      var newFlyUser = new User();
-		      for (var key in newUser) {
-			  newFlyUser[key] = newUser[key];
-		      }
-		      newFlyUser.documentsPriv = [];
-		      newFlyUser.save(function(err) {
-			  if (err) {
-			      console.log("==============Error in saving user======"); 
-			  } else  {
-			      console.log("================saved user=============");
-			  }
-			  console.log(newFlyUser);
-			  console.log("======================================");
-		      });
-		      
-		      // load user here
-		      var loadedUser = loadUser(newFlyUser);
-		      for (var key in loadedUser) {
-			  req.session[key] = loadedUser[key];
-		      }
-		      
-		      // redirect to home page with user
-		      // logged in and ready to rumble!
-		      res.redirect("home");     
-		  }
-	      });
-    
-	
+                displayErrorsForSignUp(res, errors);
+            }
+            else {
+                // save the user
+                var newFlyUser = new User();
+                for (var key in newUser) {
+                    newFlyUser[key] = newUser[key];
+                }
+                newFlyUser.documentsPriv = [];
+                newFlyUser.save(function(err) {
+                    if (err) {
+                        console.log("==============Error in saving user======");
+                    }
+                    else {
+                        console.log("================saved user=============");
+                    }
+                    console.log(newFlyUser);
+                    console.log("======================================");
+                });
+
+                // load user here
+                loadUser(newFlyUser, function(err, loadedUser) {
+                    for (var key in loadedUser) {
+                        req.session[key] = loadedUser[key];
+                    }
+                    // redirect to home page with user
+                    // logged in and ready to rumble!
+                    res.redirect("home");
+                });
+
+            }
+        });
     } else {
 	// there's an error. Return error message(s) to user
 	displayErrorsForSignUp(res, errors);
@@ -408,9 +413,11 @@ exports.createDoc = function(req, res) {
 		console.log("Document Priv Object created===============");
 		console.log(docPriv);
 		console.log("===========================================");
-		
+		// save docPriv
+        docPriv.save();
+        
 		// add to user's documentsPriv
-		user.documentsPriv.push(docPriv);
+		user.documentsPriv.push(docPriv._id);
 		
 		// save the document
 		user.save();
@@ -1099,18 +1106,20 @@ exports.reloadSession = function(req, res) {
 	response.errors.push("You are not logged in.");
 	res.json(response);
 	return;
-    } else if (req.session.currentUser == req.body.document.forUser) {
-	User.findOne({userName: req.session.currentUser}, function(err, user) {
-	    // reload user
-	    var loadedUser = loadUser(user);
-	    for (var key in loadedUser) {
-		req.session[key] = loadedUser[key];
-	    }
-	    
-	    // load userDocuments
-	    response.userDocuments = req.session.userDocuments;
-	    
-	    res.json(response);
+	}
+	else if (req.session.currentUser == req.body.document.forUser) {
+	    User.findOne({
+	        userName: req.session.currentUser
+	    }, function(err, user) {
+	        // reload user
+	        var loadedUser = loadUser(user, function(err, loadedUser) {
+	            for (var key in loadedUser) {
+	                req.session[key] = loadedUser[key];
+	            }
+	            // load userDocuments
+	            response.userDocuments = req.session.userDocuments;
+	            res.json(response);
+	        });
 	});
     }
 };
@@ -1566,53 +1575,85 @@ var displayErrorsForSignUp = function(res, errors) {
  * Returns an object containing user credentials
  * like username and what not.
  */
-var loadUser = function(user) {
+var loadUser = function(user, callback) {
     var obj = {};
-    
+
     obj.currentUser = user.userName;
     obj.isLoggedIn = true;
     obj.userDocuments = [];
     obj.userDocumentsPriv = user.documentsPriv;
-    
+
     // user document to send off to front end for display
-    var userDocument = {}
-    , priv;
+    var userDocument = {}, priv;
+
+    var count = user.documentsPriv.length;
+    var processed = 0;
 
     user.documentsPriv.forEach(function(item, i) {
-	userDocument.id = item.documentId;
-	userDocument.name = item.documentName;
-	// set defaults here
-	userDocument.readAccess = false;
-	userDocument.writeAccess = false;
-	userDocument.execAccess = false;
-	userDocument.canShare = false;
-	
-	// set privileges here
-	priv = item.access;
-	
-	if (priv >= 4) {
-	    userDocument.readAccess = true;
-	    priv -= 4;
-	}
-	if (priv >= 2) {
-	    userDocument.writeAccess = true;
-	    priv -= 2;
-	}
-	if (priv == 1) {
-	    userDocument.execAccess = true;
-	}
-
-	// if user has R, W, X access, he can share the document
-	// else he cannot
-	if (item.access == 7) {
-	    userDocument.canShare = true;
-	}
-	
-	obj.userDocuments.push(userDocument);
-	userDocument = {};
+        DocPrivilege.findOne({
+            _id: item
+        }, function(err, docPriv) {
+            if (err) {
+                console.log("error: ");
+                console.log(err);
+                return;
+            }
+            if (!docPriv || typeof docPriv.loadDocument != "function") {
+                // is user even in db ? 
+                console.log("error", "There's no document with id " + item + " in our database");
+                return;
+            }
+            else {
+                var userDocument = {}
+                var userDoc = loadDocument(docPriv);
+                for (key in userDoc) {
+                    userDocument[key] = userDoc[key];
+                }
+                obj.userDocuments.push(userDocument);
+            }
+            // make sure that all documents are loaded
+            if (++processed == count) {
+                callback(false , obj);
+            }
+        });
     });
+}
 
-    return obj;
+
+
+var loadDocument = function(docPriv) {
+    var userDocument = {};
+    var priv;
+
+    userDocument.id = docPriv.documentId;
+    userDocument.name = docPriv.documentName;
+    // set defaults here
+    userDocument.readAccess = false;
+    userDocument.writeAccess = false;
+    userDocument.execAccess = false;
+    userDocument.canShare = false;
+
+    // set privileges here
+    priv = docPriv.access;
+
+    if (priv >= 4) {
+        userDocument.readAccess = true;
+        priv -= 4;
+    }
+    if (priv >= 2) {
+        userDocument.writeAccess = true;
+        priv -= 2;
+    }
+    if (priv == 1) {
+        userDocument.execAccess = true;
+    }
+
+    // if user has R, W, X access, he can share the document
+    // else he cannot
+    if (docPriv.access == 7) {
+        userDocument.canShare = true;
+    }
+    return userDocument;
 }
 
 /**

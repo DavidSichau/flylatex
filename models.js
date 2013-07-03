@@ -59,7 +59,7 @@ var User = new Schema ({
     , memberSince: {type: Date
 		    , default: new Date()
 		   }
-    , documentsPriv: [DocPrivilege] // list of DocPrivilege Objects
+    , documentsPriv: [ObjectId] // list of DocPrivilege Objects
 });
 
 var Message = new Schema ({
@@ -150,6 +150,45 @@ fs.mkdirp(includespath, function(err) {
 });
 configs.pdfs.path = pdfspath;
 configs.includes.path = includespath;
+
+
+DocPrivilege.method("loadDocument", function(){
+    var userDocument = {};
+    var priv;
+
+    userDocument.id = this.documentId;
+    userDocument.name = this.documentName;
+    // set defaults here
+    userDocument.readAccess = false;
+    userDocument.writeAccess = false;
+    userDocument.execAccess = false;
+    userDocument.canShare = false;
+
+    // set privileges here
+    priv = this.access;
+
+    if (priv >= 4) {
+        userDocument.readAccess = true;
+        priv -= 4;
+    }
+    if (priv >= 2) {
+        userDocument.writeAccess = true;
+        priv -= 2;
+    }
+    if (priv == 1) {
+        userDocument.execAccess = true;
+    }
+
+    // if user has R, W, X access, he can share the document
+    // else he cannot
+    if (this.access == 7) {
+        userDocument.canShare = true;
+    }
+    console.log("+++++userDoc++++");
+    console.log(userDocument);
+    console.log("+++++++++");
+    return userDocument;
+});
 
 
 /*
