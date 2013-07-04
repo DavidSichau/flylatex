@@ -97,11 +97,11 @@ exports.preIndex = function(req, res, next) {
 	// user's already logged in, so go on
 	next();
     } else if (req.body.username && req.body.username.length > 0
-	       && req.body.password && req.body.password.length > 0) {
+          && req.body.password && req.body.password.length > 0) {
 
 	// user's not logged in, but wants to log in
 	User.findOne({userName: req.body.username}
-		  , function(err, user) {
+        , function(err, user) {
 		      if (err) {
 			  console.log("error: ");
 			  console.log(err);
@@ -330,7 +330,7 @@ exports.processSignUpData = function(req, res) {
     }
 };
 
-/*
+/**
  * createDoc ->
  * creates a new document for the current user.
  * error if user not logged in.
@@ -457,89 +457,112 @@ exports.createDoc = function(req, res) {
  * @param res -> response object
  */
 exports.deleteDoc = function(req, res) {
+    console.log("deleteDoc called");
     // response to send back to user after successful deletion (or error)
-    var response = {errors:[], infos:[], code:200};
+    var response = {
+        errors: [],
+        infos: [],
+        code: 200
+    };
 
     // get document id,name for document to delete
-    var docId = req.body.docId
-    , docName;
+    var docId = req.body.docId,
+        docName;
 
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
-	response.errors.push("Weird. Seems like you're not logged in.");
-	res.json(response);
-	return;
+        response.errors.push("Weird. Seems like you're not logged in.");
+        res.json(response);
+        return;
     }
     // remove the document from Users collections
-    User.findOne({userName: req.session.currentUser}, function(err, user) {
-	if (err || !user) {
-	    console.log("unable to delete doc from " + user.userName + "'s list of documents");
-	    response.errors.push("Had problems processing your deletion. Try again.");
-	    res.json(response);
-	    return;
-	}
-	for (var i = 0; i < user.documentsPriv.length; i++) {
-	    if (user.documentsPriv[i].documentId == docId) {
-		docName = user.documentsPriv[i].documentName;
-		user.documentsPriv.splice(i, 1);
+    User.findOne({
+        userName: req.session.currentUser
+    }, function(err, user) {
+        if (err || !user) {
+            console.log("unable to delete doc from " + user.userName + "'s list of documents");
+            response.errors.push("Had problems processing your deletion. Try again.");
+            res.json(response);
+            return;
+        }
+        
+        
+        // change session object to reflect new change in user's documents
+        for (var i = 0; i < req.session.userDocuments.length; i++) {
+            if (req.session.userDocuments[i].id == docId) {
+                req.session.userDocuments.splice(i, 1);
+                console.log("Removed userDocument with id: " + docId + " from session object");
+            }
+        }
+        
+        
+        DocPrivilege.find({
+            documentId: docId
+        }, function(err, docsPriv) {
+            var numberOfDocuments = docsPriv.length;
+            var docPrivId = undefined
+            //remove docPriv from User and DB
+            for (var i = 0; i < user.documentsPriv.length; i++) {
+                for (var j = 0; j < docsPriv.length; j++) {
+                    if (user.documentsPriv[i].equals(docsPriv[j]._id)) {
+                        docName = docsPriv[j].documentName;
+                        docPrivId = docsPriv[j]._id;
+                        user.documentsPriv.splice(i, 1);
+                        console.log("Removed documentsPriv (documentId= " + docId + ") from user " + user.userName);
+                        docsPriv[j].remove(function(err) {
+                            if (!err) console.log("Removed documentPriv (_id= " + docPrivId+ ") completely from the database");
+                            else console.log("Error while deleting documentPriv (_id= " + docPrivId + ") completely from the database");
+                        });
+                        //TODO make the break of the loop nicer
+                        i = user.documentsPriv.length;
+                        j = numberOfDocuments;
+                    } 
+                }
+            }
+            // save the user
+            user.save();
+            
+            // check if somebody else have the document
+            if (numberOfDocuments === 1){
+                Document.findOne({
+                    _id: docId
+                }).remove(function(err) {
+                    if (!err) console.log("Removed document(_id= " + docId + ") completely from the database");
+                    else console.log("Error while deleting document(_id= " + docId + ") completely from the database");
+                });
+            } else{
+                // some other user(s) has access to this document
+                console.log("Document(docId=" + docId + ") not deleted because some other users still have access to this document");
 
-		console.log("Removed documentsPriv with documentId: " + docId);
-	    }
-	}
-	
-	// save a document
-	user.save();
+                // then remove the current userName from the the list of users
+                // with share (full) access, if there
+                Document.findOne({
+                    _id: docId
+                }, function(err, doc) {
+                    if (!err) {
+                        var found = false;
+                        var i; // loop variable
+                        for (i = 0; i < doc.usersWithShareAccess.length; i++) {
+                            if (doc.usersWithShareAccess[i] == req.session.currentUser) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found) {
+                            doc.usersWithShareAccess.splice(i, 1);
+                            // save the document
+                            doc.save();
+                        }
+                    }
+                });
+            }
+            if (response.errors.length == 0 && docName.length > 0) {
+                response.infos.push("Successfully deleted the document " + docName);
+                res.json(response);
+            
+            }
+        });
+        
 
-	// change session object to reflect new change in user's documents
-	for (var i = 0; i < req.session.userDocuments.length; i++) {	    
-	    if (req.session.userDocuments[i].id == docId) {
-		req.session.userDocuments.splice(i,1);
-		
-		console.log("Removed userDocument with id: " + docId + " from session object");
-	    }
-	}
-		
-	// remove the document from Documents collections
-	// if no other user has it
-	DocPrivilege.find({documentId:docId}, function(err, docs) {
-	    if (docs.length == 0) {
-		// no other user has this document
-		Document.findOne({_id:docId}).remove(function(err) {
-		    if (!err) 
-			console.log("Removed document with _id " + docId + " completely from the database");
-		    else
-			console.log("Error while deleting document with id " + docId + " completely from the database");
-		});
-	    } else {
-		// some other user(s) has access to this document
-		console.log("Document(docId="+docId+") not deleted because some other users still have access to this document");
-
-		// then remove the current userName from the the list of users
-		// with share (full) access, if there
-		Document.findOne({_id: docId}, function(err, doc) {
-		    if (!err) {
-			var found = false
-			, i; // loop variable
-			
-			for (i = 0; i < doc.usersWithShareAccess.length; i++) {
-			    if (doc.usersWithShareAccess[i] == req.session.currentUser) {
-				found = true;
-				break;
-			    }
-			}
-			if (found) {
-			    doc.usersWithShareAccess.splice(i, 1);
-			    
-			    // save the document
-			    doc.save();
-			}
-		    }
-		});
-	    }
-	});
-	if (response.errors.length == 0 && docName.length > 0) {
-	    response.infos.push("Successfully deleted the document " + docName);
-	    res.json(response);
-	}
     });
 };
 
@@ -710,6 +733,7 @@ exports.requestAccess = function(req, res) {
 		var newMessage, i;
 		
 		for (i = 0; i < doc.usersWithShareAccess.length; i++) {
+            // TODO Check if only one message is stored
 		    newMessage = new Message();
 		    newMessage.messageType = MESSAGE_TYPES.requestAccess;
 		    newMessage.fromUser = req.session.currentUser;
@@ -788,8 +812,8 @@ exports.getMessages = function(req, res) {
     });
 };
 
-/**
- * grantAccess ->
+/** UPDATED
+ * grantAccess -> 
  * grant another user access to some document
  * @param req : request object
  * @param res: response object
@@ -875,7 +899,7 @@ exports.grantAccess = function(req, res) {
     });
 };
 		    
-/**
+/** UPDATED
  * acceptAccess ->
  * accept another user's offer to have  
  * access to a document
@@ -985,7 +1009,7 @@ exports.acceptAccess = function(req, res) {
 
 };
 
-/**
+/** UPDATED
  * exports.reloadSession -
  * reload the user's documents and send back the new documents
  *
@@ -1171,6 +1195,7 @@ exports.compileDoc = function(req, res) {
  * @param res : response object
  */
 exports.addNewDocument = function(req, res) {
+    console.log("addNewDocument called");
     var response = {infos:[], errors: []};
     
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
@@ -1489,6 +1514,7 @@ var loadUser = function(user, callback) {
  * Helper function to load all documents of one user
  * The callback returns as first parameter the error
  * The second parameter is the list of documents
+ * THIS METHOD CAN BE SIMPLIFIED
  */
 var loadDocuments = function(documentsPriv, callback) {
     var userDocuments = [];
