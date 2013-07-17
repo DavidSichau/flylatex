@@ -66,6 +66,8 @@ app.post('/signup', routes.processSignUpData);
 // for creating a new document
 app.put('/createdoc', routes.createDoc);
 
+app.post('/createSubDoc', routes.createSubDoc);
+
 // for deleting a document
 app.del('/deletedoc', routes.deleteDoc);
 

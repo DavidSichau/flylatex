@@ -35,6 +35,7 @@ var DocPrivilege = new Schema ({
      */
     , documentId: ObjectId
     , documentName: String
+    , subDocsId: [ObjectId]
 });
 
 

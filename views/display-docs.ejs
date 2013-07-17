@@ -1,61 +1,82 @@
 <div class="row">
-  <div class="span7">
-    <div class="documents-section-errors">
-      <!-- put dynamic errors onhere -->
-      
-      <!-- it should like the errors on the other pages. Be consistent. -->
+    <div class="span7">
+        <div class="documents-section-errors">
+            <!-- put dynamic errors onhere -->
+            <!-- it should like the errors on the other pages. Be consistent. -->
+        </div>
     </div>
-  </div>
-  <div class="documents-section span4">
-    <div class="create-doc-block" style="display:none;">
-      <form class="well form-inline" onsubmit="docs_manager.createDoc($(this).find('[name=docName]').val());return false;">
-	<input type="text" name="docName" class="input-medium" placeholder="New Document"/>
-	<button type="submit" class="btn">Create Doc</button>
-      </form>
+    <div class="documents-section span4">
+        <div class="create-doc-block" style="display:none;">
+            <form class="well form-inline" onsubmit="docs_manager.createDoc($(this).find('[name=docName]').val());return false;">
+                <input type="text" name="docName" class="input-medium" placeholder="New Document"
+                />
+                <button type="submit" class="btn">Create Doc</button>
+            </form>
+        </div>
+        
+        <div class="create-subdoc-block" style="display:none;">
+            <form class="well form-inline" onsubmit="docs_manager.createSubDoc($(this).find('[name=subDocName]').val(),$(this).find('#parentDocs').val());return false;">
+                <input type="text" name="subDocName" class="input-medium" placeholder="New Document"
+                />
+                <select id="parentDocs">
+                    <option value="">Select the Master document...</option>
+                    <% for (var i=0 ; i < userDocuments.length; i++) { %>
+                        <option value="<%= userDocuments[i].id %>">
+                            <%=userDocuments[i].name %>
+                        </option>
+                        <% } %>
+                </select>
+                <button type="submit" class="btn">Create Sub Doc</button>
+            </form>
+        </div>
+        
+        <div class="btn-group pull-right">
+            <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Manage Docs
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Doc</a>
+                    <a href="javascript:void(0);" onclick="docs_manager.showDeleteButtons();">Delete Doc</a>
+                    <a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Create New Sub Doc</a>
+                    <a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a>
+                </li>
+            </ul>
+        </div>
+        <ul class="list-of-documents nav nav-list">
+            <li class="nav-header">
+                <b>My Latex Documents</b>
+            </li>
+            <!-- remember to set one of the <li>'s to "active" class -->
+            <!-- list of all the user's documents -->
+            <% for (var i=0 ; i < userDocuments.length; i++) { %>
+                <li data-doc-id="<%= userDocuments[i].id %>">
+                    <a style="float:left;clear:both" href="/document/<%= userDocuments[i].id %>"><%= userDocuments[i].name %></a>
+                    <div class="btn-group pull-right">
+                        <% if (userDocuments[i].readAccess) { %>
+                            <button disabled class="btn">Read</button>
+                            <% } else { %>
+                                <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                                class="btn">Read</button>
+                                <% } if (userDocuments[i].writeAccess) { %>
+                                    <button class="btn" disabled>Write</button>
+                                    <% } else { %>
+                                        <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                                        class="btn">Write</button>
+                                        <% } if (userDocuments[i].execAccess) { %>
+                                            <button class="btn" disabled>Exec</button>
+                                            <% } else { %>
+                                                <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                                                class="btn">Exec</button>
+                                                <% } %>
+                                                    <% if (userDocuments[i].canShare) { %>
+                                                        <button class="btn" onclick="docs_manager.openShareDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');">Share</button>
+                                                        <% } %>
+                    </div>
+                    <button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                    style="display:none;" class="close">x</button>
+                </li>
+                <% } %>
+        </ul>
     </div>
-    <div class="btn-group pull-right">
-      <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-	Manage Docs
-	<span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu">
-	<li>
-	  <a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Doc</a>
-	  <a href="javascript:void(0);" onclick="docs_manager.showDeleteButtons();">Delete Doc</a>
-	  <a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a>
-	</li>
-      </ul>
-    </div>
-    <ul class="list-of-documents nav nav-list">
-      <li class="nav-header">
-	<b>My Latex Documents</b>
-      </li>
-      <!-- remember to set one of the <li>'s to "active" class -->
-      <!-- list of all the user's documents -->
-      <% for (var i = 0; i < userDocuments.length; i++) { %>
-       <li data-doc-id="<%= userDocuments[i].id %>">
-	<a style="float:left;clear:both" href="/document/<%= userDocuments[i].id %>" ><%= userDocuments[i].name %></a>
-	<div class="btn-group pull-right">
-	  <% if (userDocuments[i].readAccess) { %>
-	  <button disabled class="btn">Read</button>
-	  <% } else { %>
-	  <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" class="btn">Read</button>
-	  <% } if (userDocuments[i].writeAccess) { %>
-	  <button class="btn" disabled>Write</button>
-	  <% } else { %>
-	  <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" class="btn">Write</button>
-	  <% } if (userDocuments[i].execAccess) { %>
-	  <button class="btn" disabled>Exec</button> 
-	  <% } else { %>
-	  <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" class="btn">Exec</button>
-	  <% } %>
-	  <% if (userDocuments[i].canShare) { %>
-	  <button class="btn" onclick="docs_manager.openShareDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');">Share</button>
-	  <% } %>
-	</div>
-	<button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" style="display:none;" class="close">x</button>
-     </li>
-      <% } %>
-    </ul>
-  </div>
 </div>

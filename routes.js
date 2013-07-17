@@ -263,13 +263,107 @@ exports.processSignUpData = function(req, res) {
 	helpers.displayErrorsForSignUp(res, errors);
     }
 };
+
+
+exports.createSubDoc = function(req, res) {
+    console.log("createSubDoc called");
+    var response = {
+        infos: [],
+        errors: [],
+        code: 200,
+        newDocument: {
+            id:  null,
+            name: null
+        }
+    };    
+    
+    var docName = req.body.docName;
+    var parentId = req.body.parentId;
+    
+    if (!(docName.length && docName.length > 0)) {
+        // check that document's name is not empty
+        response.errors.push("Error in creating document with no title or name");
+        res.json(response);
+        return;
+    }
+    else if (!(req.session.isLoggedIn && req.session.currentUser)) {
+        // user is not logged in
+        response.errors.push("You're not not logged in. Please log in!");
+        res.json(response);
+        return;
+    }
+    else if(parentId === undefined || parentId === "") {
+        response.errors.push("You need to select an master document to create a new sub document!");
+        res.json(response);
+        return;
+    }
+    
+    
+    // check the list of documents
+    // verify that this new document doesn't
+    // have the same name as the old ones
+    var found = false;
+    for (var i = 0; i < req.session.userDocuments.length; i++) {
+        if (req.session.userDocuments[i].name == docName) {
+            found = true;
+            break;
+        }
+    }
+    if (found) {
+        response.errors.push("Error in creating document that shares its name with an already existing document you have.");
+        res.json(response);
+        return;
+    }
+    else {
+        // then check that the user doesn't have up to MAX_DOCS documents yet
+        if (req.session.userDocuments.length >= MAX_DOCS) {
+            response.errors.push("You can't have more than " + MAX_DOCS + " documents. Delete some documents to create space. Or contact the Administrator.");
+            res.json(response);
+            return;
+        }
+        else {
+            // so we can create a new document 
+            // the new document will have only one line for starters
+            var newDoc = helpers.createNewDocument(req.body.docName, req.session.currentUser);
+            console.log(newDoc);
+            
+            DocPrivilege.find({
+                documentId: parentId
+            }, function(err, docPriv){
+                console.log(docPriv);
+                if (err || docPriv.length === 0) {
+                    response.errors.push("error", "Couldn't find the parent doc. Weird.");
+                    res.json(response);
+                    return;
+                }
+                for (var i = 0 ; i< docPriv.length; i++  ) {
+                    console.log(docPriv[i]);
+                    docPriv[i].subDocsId.push(newDoc._id);
+                    docPriv[i].save();
+                    
+                }
+                // inform user of new document creation
+                response.infos.push("Just created the new sub Document: " + req.body.docName + " Hooray!");
+                res.json(response);
+                
+            });    
+            
+        }
+        
+    }
+    
+    
+};
+
+
+
 /**
  * createDoc ->
  * creates a new document for the current user.
  * error if user not logged in.
  * @note
  * this function is called asynchronous and should
- * sennd back a json response
+ * send back a json response
  * and not redirect or reload page.
  *
  * @param req -> request object

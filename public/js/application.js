@@ -75,67 +75,73 @@ function DocsManager() {
      * @param id : id of document to compile and render
      */
     this.compileAndRender = function(documentId, documentName) {
-	// first try to save the current document being displayed
-	$.ajax({
-	    type: "POST"
-	    , data: {"documentId" : documentId
-		     , "documentName" : documentName
-		     , "documentText": currentDoc.getText()}
-	    , url: "/savedoc"
-	    , success: function(response) {
-		// update alerts
-		updateAlerts(response);
+        // first try to save the current document being displayed
+        $.ajax({
+            type: "POST",
+            data: {
+                "documentId": documentId,
+                "documentName": documentName,
+                "documentText": currentDoc.getText()
+            },
+            url: "/savedoc",
+            success: function(response) {
+                // update alerts
+                updateAlerts(response);
 
-		if (response.errors.length > 0) {
-		    return;
-		}
+                if (response.errors.length > 0) {
+                    return;
+                }
 
-		// if no errors encountered, 
-		// then try to compile the document
-		$.ajax({
-		    type: "POST"
-		    , data: {"documentId": documentId
-			     , "documentName" : documentName}
-		    , url: "/compiledoc"
-		    , success: function(response) {
-			// update alerts
-			updateAlerts(response);
-			console.log(response);
+                // if no errors encountered, 
+                // then try to compile the document
+                $.ajax({
+                    type: "POST",
+                    data: {
+                        "documentId": documentId,
+                        "documentName": documentName
+                    },
+                    url: "/compiledoc",
+                    success: function(response) {
+                        // update alerts
+                        updateAlerts(response);
+                        console.log(response);
 
-			// update logs for most recent pdf compile
-			// if any errors found in the log, then display
-			// error in compile message to user
-			var isError = false;
+                        // update logs for most recent pdf compile
+                        // if any errors found in the log, then display
+                        // error in compile message to user
+                        var isError = false;
 
-			updateLogs(response.logs);
+                        updateLogs(response.logs);
 
-			if (response.errors.length > 0) {
-				isError = true;
-			}
+                        if (response.errors.length > 0) {
+                            isError = true;
+                        }
 
-			// PDFJS.disableWorker = true;
-			PDFJS.workerSrc = "/js/pdf.js";
-			if (!isError) {
-			    data.docOptions = {
-				pdfDoc : null
-				, pageNum : 1 // start by rendering page 1
-				, scale : 1.0 // default scale of page
-				, canvas : document.getElementById("the-canvas")
-				, ctx : document.getElementById("the-canvas").getContext("2d")
-			    };
+                        // PDFJS.disableWorker = true;
+                        PDFJS.workerSrc = "/js/pdf.js";
+                        if (!isError) {
+                            data.docOptions = {
+                                pdfDoc: null,
+                                pageNum: 1 // start by rendering page 1
+                                ,
+                                scale: 1.0 // default scale of page
+                                ,
+                                canvas: document.getElementById("the-canvas"),
+                                ctx: document.getElementById("the-canvas").getContext("2d")
+                            };
 
 
-			    // Asynchronously download PDF as an ArrayBuffer
-			    PDFJS.getDocument("http://"+document.location.host+response.compiledDocURI).then(function(_pdfDoc){
-				data.docOptions.pdfDoc = _pdfDoc;
+                            // Asynchronously download PDF as an ArrayBuffer
+                            PDFJS.getDocument("http://" + document.location.host + response.compiledDocURI).then(function(_pdfDoc) {
+                                data.docOptions.pdfDoc = _pdfDoc;
 
-				renderPage(data.docOptions.pageNum);
-			    });
-			}
-		    }
-		});
-	    }
-	});
+                                renderPage(data.docOptions.pageNum);
+                            });
+                        }
+                    }
+                });
+            }
+        });
     };
 
     /**
@@ -159,15 +165,15 @@ function DocsManager() {
 	// update contents on the 'view logs' button
 	// with the last page
 	loadLogPage(data.logPages[data.currentPage]);
-	
+
 	for (var i = 0; i < lines.length; i++) {
 	    // if '!' in line, there's an error
 	    if (lines[i].indexOf("!") != -1) {
-		noError = false;
+	        noError = false;
 	    }
 	}
-	return  noError;
-    };
+	return noError;
+	};
 
     /**
      * Get page info from document, resize canvas accordingly, and render page
@@ -202,11 +208,10 @@ function DocsManager() {
      * @param logText : text of log
      */
     var loadLogPage = function(logText) {
-	// update 'log text', prepending some controls
-	$(domTargets.viewLogsButton).attr("data-content"
-					  , data.prevNextLogsHTML+logText+"</div>");
-	// also update log contents if displayed
-	$(domTargets.popoverContent).html(logText+"</div>");
+        // update 'log text', prepending some controls
+        $(domTargets.viewLogsButton).attr("data-content", data.prevNextLogsHTML + logText + "</div>");
+        // also update log contents if displayed
+        $(domTargets.popoverContent).html(logText + "</div>");
     };
     
     /**
@@ -215,29 +220,27 @@ function DocsManager() {
      *
      */
     this.goPreviousPage = function() {
-	console.log("going to previous page");
-	// get document options
-	var docOptions = data.docOptions;
-	
-	if (docOptions.pageNum <= 1)
-            return;
-	docOptions.pageNum--;
-	renderPage(docOptions.pageNum);
+        console.log("going to previous page");
+        // get document options
+        var docOptions = data.docOptions;
+
+        if (docOptions.pageNum <= 1) return;
+        docOptions.pageNum--;
+        renderPage(docOptions.pageNum);
     }
 
     /**
      * Go to next page
      */
     this.goNextPage = function() {
-	console.log("going to next page");
-	// get document options
-	var docOptions = data.docOptions;
+        console.log("going to next page");
+        // get document options
+        var docOptions = data.docOptions;
 
-	
-	if (docOptions.pageNum >= docOptions.pdfDoc.numPages)
-            return;
-	docOptions.pageNum++;
-	renderPage(docOptions.pageNum);
+
+        if (docOptions.pageNum >= docOptions.pdfDoc.numPages) return;
+        docOptions.pageNum++;
+        renderPage(docOptions.pageNum);
     }
 
     
@@ -245,23 +248,23 @@ function DocsManager() {
     /**
      * Load next log page, if any
      */
-    this.loadLogsNextPage = function() {	
-	if (data.currentPage+1 < data.logPages.length) {
-	    data.currentPage++;
-	    
-	    loadLogPage(data.logPages[data.currentPage]);
-	}
+    this.loadLogsNextPage = function() {
+        if (data.currentPage + 1 < data.logPages.length) {
+            data.currentPage++;
+
+            loadLogPage(data.logPages[data.currentPage]);
+        }
     };
     
     /**
      * Load previous log page, if any
      */
-    this.loadLogsPreviousPage = function() {	
-	if (data.currentPage-1 > 0) {
-	    data.currentPage--;
-	    
-	    loadLogPage(data.logPages[data.currentPage]);
-	}
+    this.loadLogsPreviousPage = function() {
+        if (data.currentPage - 1 > 0) {
+            data.currentPage--;
+
+            loadLogPage(data.logPages[data.currentPage]);
+        }
     };
 
     /*
@@ -269,7 +272,7 @@ function DocsManager() {
      * @param _id -> id of document to request read access to
      */
     this.reqReadAccess = function(id, name) {
-	displayRequestAccess('read', id, name);
+        displayRequestAccess('read', id, name);
     };
 
     /*
@@ -277,7 +280,7 @@ function DocsManager() {
      * @param _id -> id of document to request write access to
      */
     this.reqWriteAccess = function(id, name) {
-	displayRequestAccess('write', id, name);	
+        displayRequestAccess('write', id, name);
     };
     
     /*
@@ -285,55 +288,55 @@ function DocsManager() {
       * @param _id -> id of document to request execute access to
      */
     this.reqExecAccess = function(id, name) {
-	displayRequestAccess('exec', id, name);
+        displayRequestAccess('exec', id, name);
     };
 
-    /*
+    /**
      * displayRequestAccess ->
      * open a light box that shows the accesses a user's requesting for.
      * 
      * @param type: either read, write, or exec or a list of privileges
     */
     var displayRequestAccess = function(privs, id, name) {
-	if (typeof privs == "undefined")  {
-	    return; 
-	}
-	// get current privs the user has
-	var privsForDoc = [];
-	$(domTargets.documentList).find("[data-doc-id="+id+"] button")
-	    .filter(":disabled")
-	    .each(function(i, elem) {
-		privsForDoc.push($(elem).text().toLowerCase());
-	    });
-
-	// remove any previously displayed request access modals
-	$("#request-access").remove();
-
-	// default request object
-	var requestObj = {docId: id
-			  , docName: name
-			  , read: false
-			  , write: false
-			  , exec: false};
-
-	privsForDoc.forEach(function(item, index){
-	    requestObj[item] = true;
-	});
-
-	if (typeof privs.push != "undefined") {
-	    privs.forEach(function(item, index) {
-		requestObj[item] = true;	
-	    });
-	} else if (typeof privs == "string") {
-	    requestObj[privs] = true;
-	}
-	// prepend the modal to the DOM and display
-	$(domTargets.bodySecondContainer)
-	    .prepend(domTargets.requestAccessBlock(requestObj));
-	
-	$("#request-access").modal("show");
+        if (typeof privs == "undefined") {
+            return;
+        }
+        // get current privs the user has
+        var privsForDoc = [];
+        $(domTargets.documentList).find("[data-doc-id=" + id + "] button").filter(":disabled").each(function(i, elem) {
+            privsForDoc.push($(elem).text().toLowerCase());
+        });
+    
+        // remove any previously displayed request access modals
+        $("#request-access").remove();
+    
+        // default request object
+        var requestObj = {
+            docId: id,
+            docName: name,
+            read: false,
+            write: false,
+            exec: false
+        };
+    
+        privsForDoc.forEach(function(item, index) {
+            requestObj[item] = true;
+        });
+    
+        if (typeof privs.push != "undefined") {
+            privs.forEach(function(item, index) {
+                requestObj[item] = true;
+            });
+        }
+        else if (typeof privs == "string") {
+            requestObj[privs] = true;
+        }
+        // prepend the modal to the DOM and display
+        $(domTargets.bodySecondContainer).prepend(domTargets.requestAccessBlock(requestObj));
+    
+        $("#request-access").modal("show");
     };
-    /*
+    /**
      * this.createDoc
      *
      * @param docName -> name of document to create
@@ -345,31 +348,58 @@ function DocsManager() {
      * docName -> name of the document to create
      */
     this.createDoc = function(docName) {
-	$.ajax({
-	    type: "PUT"
-	    , data: {"docName": docName}
-	    , url: "/createdoc"
-	    , success: function(response) {
-		// update alerts
-		updateAlerts(response);
-		// check if any errors
-		if (response.errors.length > 0) {
-		    return;
-		}
+        $.ajax({
+            type: "PUT",
+            data: {
+                "docName": docName
+            },
+            url: "/createdoc",
+            success: function(response) {
+                // update alerts
+                updateAlerts(response);
+                // check if any errors
+                if (response.errors.length > 0) {
+                    return;
+                }
 
-		// get new user document object
-		var userDocument = response.newDocument;
-		
-		$(domTargets.documentList)
-		    .append(domTargets.singleDocEntry(userDocument))
+                // get new user document object
+                var userDocument = response.newDocument;
 
-		// close the createDocView
-		docs_manager.closeCreateDocView();
+                $(domTargets.documentList).append(domTargets.singleDocEntry(userDocument))
 
-		// hide delete buttons in case they were previously shown
-		docs_manager.hideDeleteButtons();
-	    }
-	});
+                // close the createDocView
+                docs_manager.closeCreateDocView();
+
+                // hide delete buttons in case they were previously shown
+                docs_manager.hideDeleteButtons();
+                // hide the create sub doc in case they were previously shown
+                docs_manager.closeCreateSubDocView();
+            }
+        });
+    };
+    
+    
+    this.createSubDoc = function(docName, parentId) {
+        $.ajax({
+            type: "POST",
+            data: {
+                "docName": docName,
+                "parentId" : parentId
+            },
+            url: "/createSubDoc",
+            success: function(response){
+                updateAlerts(response);
+                // check if any errors
+                if (response.errors.length > 0) {
+                    return;
+                }
+                
+                
+                
+                docs_manager.closeCreateSubDocView();
+                
+            }
+        });
     };
 
     /**
@@ -378,12 +408,11 @@ function DocsManager() {
      * @param jButton : jQuery object of button
      */
     this.showCompilerView = function(jButton) {
-	// hide compiler text
-	jButton.text("Hide PDF View")
-	    .attr("onclick", "docs_manager.hideCompilerView($(this));");
-	$("#editor, #header").css("width", "600px");
-	// show compiler view
-	$('.compiler-view').slideLeftShow();
+        // hide compiler text
+        jButton.text("Hide PDF View").attr("onclick", "docs_manager.hideCompilerView($(this));");
+        $("#editor, #header").css("width", "600px");
+        // show compiler view
+        $('.compiler-view').slideLeftShow();
     };
 
     /**
@@ -391,15 +420,14 @@ function DocsManager() {
      * expand editor and collapse compiler view
      */
     this.hideCompilerView = function(jButton) {
-	// show compiler text
-	jButton.text("Show PDF View")
-	    .attr("onclick", "docs_manager.showCompilerView($(this));");
-	$("#editor, #header").css("width", "1200px");
-	// hide compiler view
-	$('.compiler-view').slideRightHide();
+        // show compiler text
+        jButton.text("Show PDF View").attr("onclick", "docs_manager.showCompilerView($(this));");
+        $("#editor, #header").css("width", "1200px");
+        // hide compiler view
+        $('.compiler-view').slideRightHide();
     };
     
-    /*
+    /**
      * this.openDocOnLoad - 
      * open the document when you load the page
      *
@@ -423,95 +451,97 @@ function DocsManager() {
      * 
      */
     this.openDocOnLoad = function(onloadDoc) {
-	// open sharejs doc in session first
-	sharejs.open(onloadDoc.id, "text", function(error, doc) {
-	    if (oldDoc) {
-		oldDoc.close();
-	    }
-	    currentDoc = doc; // store doc object	    	    
+        // open sharejs doc in session first
+        sharejs.open(onloadDoc.id, "text", function(error, doc) {
+            if (oldDoc) {
+                oldDoc.close();
+            }
+            currentDoc = doc; // store doc object	    	    
 
-	    // compile and render document
-	    // docs_manager.compileAndRender(onloadDoc.id, onloadDoc.name);
+            // compile and render document
+            // docs_manager.compileAndRender(onloadDoc.id, onloadDoc.name);
 
-	    var userDoc = onloadDoc
-	    , writeAccess = userDoc.writeAccess == "true";
-	    
-	    // make editor writeable if user has write permission on document
-	    if (writeAccess) {
-		editor.setReadOnly(false);
-	    } else {
-		editor.setReadOnly(true);
-	    }
-	    
-	    // update "last saved" info box
-	    updateLastSavedInfo(jQuery.timeago(new Date(userDoc.lastSaved)));
+            var userDoc = onloadDoc,
+                writeAccess = userDoc.writeAccess == "true";
 
-	    // load document text here
-	    if (doc.created) {
-		doc.insert(0, userDoc.text);
-	    }
-	    
-	    doc.attach_ace(editor);
-	    
-	    oldDoc = doc;	    
-	});	     
+            // make editor writeable if user has write permission on document
+            if (writeAccess) {
+                editor.setReadOnly(false);
+            }
+            else {
+                editor.setReadOnly(true);
+            }
+
+            // update "last saved" info box
+            updateLastSavedInfo(jQuery.timeago(new Date(userDoc.lastSaved)));
+
+            // load document text here
+            if (doc.created) {
+                doc.insert(0, userDoc.text);
+            }
+
+            doc.attach_ace(editor);
+
+            oldDoc = doc;
+        });
     };
     
     
-    /*
+    /**
      * this.deleteDoc
      * delete the document
      */
     this.deleteDoc = function(docId, docName) {
-	bootbox.confirm("Are you sure you want to delete the document, " + docName + " ?", function(yes) {
-	    if (yes) {
-		$.ajax({
-		    type: "DELETE"
-		    , data: {"docId": docId}
-		    , url: "/deletedoc"
-		    , success: function(response) {
-			// update alerts
-			updateAlerts(response);
-			
-			$(domTargets.documentList)
-			    .find("li[data-doc-id='"+docId+"']")
-			    .remove();
-			
-			docs_manager.hideDeleteButtons();
+        bootbox.confirm("Are you sure you want to delete the document, " + docName + " ?", function(yes) {
+            if (yes) {
+                $.ajax({
+                    type: "DELETE",
+                    data: {
+                        "docId": docId
+                    },
+                    url: "/deletedoc",
+                    success: function(response) {
+                        // update alerts
+                        updateAlerts(response);
 
-			// remove from openedDocs, openedDocsWriteable
-			// if document was opened
-			if (openedDocs.indexOf(docId) != -1) {
-			    var  i = openedDocs.indexOf(docId);
-			    openedDocs.splice(i, 1);
-			    openedDocsWriteable.splice(i, 1);
-			}
-		    }
-		});
-	    }
-	});
-	
+                        $(domTargets.documentList).find("li[data-doc-id='" + docId + "']").remove();
+
+                        docs_manager.hideDeleteButtons();
+
+                        // remove from openedDocs, openedDocsWriteable
+                        // if document was opened
+                        if (openedDocs.indexOf(docId) != -1) {
+                            var i = openedDocs.indexOf(docId);
+                            openedDocs.splice(i, 1);
+                            openedDocsWriteable.splice(i, 1);
+                        }
+                    }
+                });
+            }
+        });
+
     };
 			
-    /*
+    /**
      * this.openShareDoc
      * @param -> id of document you want to share
      */
     this.openShareDoc = function(id, name) {
-	// remove any previously display share modals
-	$("#share-modal").remove();
-	
-	// prepend modal to DOM and display
-	$(domTargets.bodySecondContainer)
-	    .prepend(domTargets.shareDocumentBlock({docId:id, docName: name}));
-	$("#share-modal").modal("show");
-	
-	// put typeahead feature
-	$("#share-modal [name=userToShare]").typeahead()
-	    .on("keyup", getAutoCompleteData);
+        // remove any previously display share modals
+        $("#share-modal").remove();
+    
+        // prepend modal to DOM and display
+        $(domTargets.bodySecondContainer).prepend(domTargets.shareDocumentBlock({
+            docId: id,
+            docName: name
+        }));
+        $("#share-modal").modal("show");
+    
+        // put typeahead feature
+        $("#share-modal [name=userToShare]").typeahead().on("keyup", getAutoCompleteData);
     };
-
-    /*
+    
+    /**
      * this.saveDoc
      *
      * @param docId -> id of document to save
@@ -521,21 +551,23 @@ function DocsManager() {
      * 
      */
     this.saveDoc = function(docId, docName) {
-	// save the document
-	$.ajax({
-	    type: "POST"
-	    , data: {"documentId" : docId
-		     , "documentName" : docName
-		     , "documentText": currentDoc.getText()}
-	    , url: "/savedoc"
-	    , success: function(response) {
-		// update alerts
-		updateAlerts(response);
-	    }
-	});
+        // save the document
+        $.ajax({
+            type: "POST",
+            data: {
+                "documentId": docId,
+                "documentName": docName,
+                "documentText": currentDoc.getText()
+            },
+            url: "/savedoc",
+            success: function(response) {
+                // update alerts
+                updateAlerts(response);
+            }
+        });
     };
 
-    /*
+    /**
      * this.shareDoc
      * @param docId: id of document to share
      * @param docName: name of document to share
@@ -544,27 +576,25 @@ function DocsManager() {
      * @param withWriteAccess: grant userToShare write access
      * @param withExecAccess: grant userToShare exec access
      */
-    this.shareDoc = function(docId, docName
-			     ,userToShare 
-			     , withReadAccess, withWriteAccess, withExecAccess) {
-	var withReadAccess = (withReadAccess === "true");
-	var withWriteAccess = (withWriteAccess === "true");
-	var withExecAccess = (withExecAccess === "true");
-	
-	// send message to other user notifying him that you want to grant him
-	// access to a document
-	var options = {
-	    "docId":docId
-	    ,"docName":docName
-	    , "userToShare": userToShare
-	    , "withReadAccess":withReadAccess
-	    , "withWriteAccess":withWriteAccess
-	    , "withExecAccess":withExecAccess
-	};
-	user_messages.sendMessage('shareAccess', options);
+    this.shareDoc = function(docId, docName, userToShare, withReadAccess, withWriteAccess, withExecAccess) {
+        var withReadAccess = (withReadAccess === "true");
+        var withWriteAccess = (withWriteAccess === "true");
+        var withExecAccess = (withExecAccess === "true");
+    
+        // send message to other user notifying him that you want to grant him
+        // access to a document
+        var options = {
+            "docId": docId,
+            "docName": docName,
+            "userToShare": userToShare,
+            "withReadAccess": withReadAccess,
+            "withWriteAccess": withWriteAccess,
+            "withExecAccess": withExecAccess
+        };
+        user_messages.sendMessage('shareAccess', options);
     };
-
-    /*
+    
+    /**
      * this.requestDoc
      * @param docId: id of document to request access to
      * @param docName: name of document to request access to
@@ -572,27 +602,26 @@ function DocsManager() {
      * @param withWriteAccess: request write access
      * @param withExecAccess: request exec access
      */
-    this.requestDoc = function(docId, docName
-			     , withReadAccess, withWriteAccess, withExecAccess) {
-
-	var withReadAccess = (withReadAccess === "true");
-	var withWriteAccess = (withWriteAccess === "true");
-	var withExecAccess = (withExecAccess === "true");
-	
-	// send message to all users that have share access to the document
-	// that has documentId, docId
-	// if no user has shareAccess to the document, notify user
-	// that no user has shareAccess to that document
-	var options = {
-	    "docId":docId
-	    ,"docName":docName
-	    , "withReadAccess":withReadAccess
-	    , "withWriteAccess":withWriteAccess
-	    , "withExecAccess":withExecAccess
-	};
-	user_messages.sendMessage('requestAccess', options);
+    this.requestDoc = function(docId, docName, withReadAccess, withWriteAccess, withExecAccess) {
+    
+        var withReadAccess = (withReadAccess === "true");
+        var withWriteAccess = (withWriteAccess === "true");
+        var withExecAccess = (withExecAccess === "true");
+    
+        // send message to all users that have share access to the document
+        // that has documentId, docId
+        // if no user has shareAccess to the document, notify user
+        // that no user has shareAccess to that document
+        var options = {
+            "docId": docId,
+            "docName": docName,
+            "withReadAccess": withReadAccess,
+            "withWriteAccess": withWriteAccess,
+            "withExecAccess": withExecAccess
+        };
+        user_messages.sendMessage('requestAccess', options);
     };
-
+    
     /*
      * showDeleteButtons -
      * show the delete buttons so that the user can 
@@ -617,6 +646,14 @@ function DocsManager() {
     this.openCreateDocView = function() {
 	$(domTargets.createDocBlock).show()
 	    .find('input').attr("value", "");
+    };
+    
+    this.openCreateSubDocView = function() {
+        $(domTargets.createSubDocBlock).show();
+    };
+    
+    this.closeCreateSubDocView = function() {
+        $(domTargets.createSubDocBlock).hide();
     };
     
     /*
@@ -828,7 +865,8 @@ function UserMessages() {
  */
 var domTargets = {
     documentList: "ul.list-of-documents"
-    , createDocBlock: "div.documents-section div.create-doc-block"
+    , createDocBlock:    "div.documents-section div.create-doc-block"
+    , createSubDocBlock: "div.documents-section div.create-subdoc-block"
     , singleDocEntry: Handlebars.compile($("#doc-li-template").html())
     , currentDocLabel: "#header #docname"
     , errorsBlock: Handlebars.compile($("#errors-template").html())
