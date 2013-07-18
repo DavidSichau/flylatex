@@ -76,7 +76,7 @@ var loadDocuments = function(documentsPriv, callback) {
             else {
                 var userDocument = {}
                 var userDoc = loadDocument(docPriv);
-                for (key in userDoc) {
+                for (var key in userDoc) {
                     userDocument[key] = userDoc[key];
                 }
                 userDocuments.push(userDocument);
@@ -101,6 +101,11 @@ var loadDocument = function(docPriv) {
     userDocument.id = docPriv.documentId;
     userDocument.name = docPriv.documentName;
     userDocument.access = docPriv.access;
+    userDocument.subDocs = [];
+    for (var i = 0; i< docPriv.subDocs.length; i++) {
+        userDocument.subDocs.push(docPriv.subDocs[i]);    
+    }
+    
     
     var priv = getPrivileges(docPriv.access);
     for(var key in priv) {
@@ -165,10 +170,17 @@ var displayErrorsForSignUp = function(res, errors) {
  * @return document
  */
 var searchForDocsInSession = function(documentId, session) {
-    if (session.userDocuments != undefined) {
+    if (session.userDocuments !== undefined) {
         for (var i = 0; i < session.userDocuments.length; i++) {
             if (session.userDocuments[i].id == documentId) {
                 return session.userDocuments[i];
+            }
+            if (session.userDocuments[i].subDocs !== undefined) {
+               for (var j = 0; j < session.userDocuments[i].subDocs.length; j++) {
+                    if (session.userDocuments[i].subDocs[j].id == documentId) {
+                        return session.userDocuments[i];
+                    }   
+               }
             }
         }
     }

@@ -23,8 +23,29 @@
       {{/if}}
     </div>
       <button onclick="docs_manager.deleteDoc('{{id}}', '{{name}}');" style="display:none;" class="close">x</button>
+       <ul class="list-of-subDocuments nav nav-list">
+                        
+                        
+        </ul>
+      
   </li>
 </script>
+
+<!-- template for options of subdocs -->
+<script id="doc-option-template" type="text/x-handlebars-template">
+    <option value="{{id}}">
+        {{name}}
+    </option>
+</script>
+
+
+<!-- template for sub docs -->
+<script id="subDoc-template" type="text/x-handlebars-template">
+  <li data-subDoc-id="{{id}}">
+    <a style="float:left;clear:both" href="/document/{{id}}">{{name}}</a>    
+  </li>
+</script>
+
 
 <!-- template for errors -->
 <script id="errors-template" type="text/x-handlebars-template">

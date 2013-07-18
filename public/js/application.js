@@ -20,15 +20,15 @@ function UserManager() {
  */
 function DocsManager() {    
     // ========= Global variables here ==========
-    var currentDoc = null
-    , oldDoc = null
-    , versionNum = 0
-    , data = {
-	currentPage : 0
-	, logPages : []
-	, prevNextLogsHTML : "<div style='margin-bottom: 20px;'><button title='Last Page' class='btn' onclick='docs_manager.loadLogsPreviousPage();' style='margin-right: 20px;'><i class='icon-arrow-left'></i></button><button title='Next Page' class='btn' onclick='docs_manager.loadLogsNextPage();'><i class='pull-right icon-arrow-right'></i></button></div><div class='main-content'>"
-	, docOptions : null
-    };
+    var currentDoc = null,
+        oldDoc = null,
+        versionNum = 0,
+        data = {
+            currentPage: 0,
+            logPages: [],
+            prevNextLogsHTML: "<div style='margin-bottom: 20px;'><button title='Last Page' class='btn' onclick='docs_manager.loadLogsPreviousPage();' style='margin-right: 20px;'><i class='icon-arrow-left'></i></button><button title='Next Page' class='btn' onclick='docs_manager.loadLogsNextPage();'><i class='pull-right icon-arrow-right'></i></button></div><div class='main-content'>",
+            docOptions: null
+        };
 
     /**
      * init ->
@@ -365,7 +365,10 @@ function DocsManager() {
                 // get new user document object
                 var userDocument = response.newDocument;
 
-                $(domTargets.documentList).append(domTargets.singleDocEntry(userDocument))
+                $(domTargets.documentList).append(domTargets.singleDocEntry(userDocument));
+                // also adds the new document to the option menue
+                $('#parentDocs').append(domTargets.optionDocEntry(userDocument));
+                
 
                 // close the createDocView
                 docs_manager.closeCreateDocView();
@@ -393,8 +396,7 @@ function DocsManager() {
                 if (response.errors.length > 0) {
                     return;
                 }
-                
-                
+                $('[data-doc-id="'+response.newSubDocument.parentId+'"] ul').append(domTargets.singleSubDocEntry(response.newSubDocument));
                 
                 docs_manager.closeCreateSubDocView();
                 
@@ -868,6 +870,8 @@ var domTargets = {
     , createDocBlock:    "div.documents-section div.create-doc-block"
     , createSubDocBlock: "div.documents-section div.create-subdoc-block"
     , singleDocEntry: Handlebars.compile($("#doc-li-template").html())
+    , singleSubDocEntry: Handlebars.compile($("#subDoc-template").html())
+    , optionDocEntry: Handlebars.compile($("#doc-option-template").html())
     , currentDocLabel: "#header #docname"
     , errorsBlock: Handlebars.compile($("#errors-template").html())
     , infosBlock: Handlebars.compile($("#infos-template").html())

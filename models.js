@@ -15,6 +15,7 @@ var crypto = require("crypto")
 , configs = require("./configs")
 , fs = require("fs-extra");
 
+
 var DocPrivilege = new Schema ({
     access: {type: Number
 	     , default: 7
@@ -35,7 +36,7 @@ var DocPrivilege = new Schema ({
      */
     , documentId: ObjectId
     , documentName: String
-    , subDocsId: [ObjectId]
+    , subDocs: [{id:ObjectId, name:String}]
 });
 
 

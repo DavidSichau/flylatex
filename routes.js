@@ -77,7 +77,7 @@ var openDocuments = {};
  * * currentDoc
  * * userDocuments - this is an abstraction of the real Document model.
      So it contains different attributes.
-     contains: id, name, readAccess, writeAccess, execAccess, canShare
+     contains: id, name, readAccess, writeAccess, execAccess, canShare, subDocs [id, name]
  * * errors
  * * infos
 */
@@ -140,7 +140,7 @@ exports.preIndex = function(req, res, next) {
                 // user authenticated! Can go in
                 helpers.loadUser(user, function(err, loadedUser) {
                     console.log("loaded user " + loadedUser.currentUser)
-                    for (key in loadedUser) {
+                    for (var key in loadedUser) {
                         req.session[key] = loadedUser[key];
                     }
 
@@ -271,7 +271,8 @@ exports.createSubDoc = function(req, res) {
         infos: [],
         errors: [],
         code: 200,
-        newDocument: {
+        newSubDocument: {
+            parentId: req.body.parentId,
             id:  null,
             name: null
         }
@@ -325,34 +326,43 @@ exports.createSubDoc = function(req, res) {
             // so we can create a new document 
             // the new document will have only one line for starters
             var newDoc = helpers.createNewDocument(req.body.docName, req.session.currentUser);
-            console.log(newDoc);
             
             DocPrivilege.find({
                 documentId: parentId
             }, function(err, docPriv){
-                console.log(docPriv);
                 if (err || docPriv.length === 0) {
                     response.errors.push("error", "Couldn't find the parent doc. Weird.");
                     res.json(response);
                     return;
                 }
+                
+                var newSubDoc = {};
+                newSubDoc.id = newDoc._id;
+                newSubDoc.name = docName;
                 for (var i = 0 ; i< docPriv.length; i++  ) {
-                    console.log(docPriv[i]);
-                    docPriv[i].subDocsId.push(newDoc._id);
+                    docPriv[i].subDocs.push(newSubDoc);
                     docPriv[i].save();
-                    
+                }
+                
+                
+                //prepare the response    
+                response.newSubDocument.id = newDoc._id;
+                response.newSubDocument.name = docName;
+                //add the subdoc to the session
+                for (var i = 0; i < req.session.userDocuments.length; i++) {
+                    if (req.session.userDocuments[i].id == parentId) {
+                        if(req.session.userDocuments[i].newSubDocs === undefined) {
+                            req.session.userDocuments[i].newSubDocs = [];
+                        }
+                        req.session.userDocuments[i].subDocs.push(newSubDoc);
+                    }
                 }
                 // inform user of new document creation
                 response.infos.push("Just created the new sub Document: " + req.body.docName + " Hooray!");
                 res.json(response);
-                
             });    
-            
         }
-        
     }
-    
-    
 };
 
 
@@ -1043,124 +1053,6 @@ exports.acceptAccess = function(req, res) {
             response.reDisplay = true;
             res.json(response);
         });
-   
- //    User.findOne({"userName":req.session.currentUser}, function(err, user) {
-	// // first make sure the user doesn't already have some access to the document
-	// // in that case, bump up the user's access
-	// var userHasDoc = false;
-	// req.session.userDocuments.forEach(function(item, index) {	    
-	//     if (item.id == req.body.documentId) {
-	// 	userHasDoc = true;
-	//     }
-	// });
-
-	// var priv = req.body.access 
-	// , readAccess = false
-	// , writeAccess = false
-	// , execAccess = false
-	// , canShare = false;
-	// // give user power to be able to share the document with other users
-	// // if he/she has full access
-	// if (priv == 7) {
-	//     canShare = true;
-	    
-	//     // give user share power
-	//     // a user can only get share access when he's given access of 7
-	//     // which corresponds to R, W, X
-	//     helpers.giveUserSharePower(req.session.currentUser, req.body.documentId);
-	// }
-	
-	// // de-couple privileges
-	// if (priv >= 4) {
-	//     readAccess = true;
-	//     priv -= 4;
-	// }
-	// if (priv >= 2) {
-	//     writeAccess = true;
-	//     priv -= 2;
-	// }
-	// if (priv == 1) {
-	//     execAccess = true;
-	// }
-	
-	// // new user document
-	// var newUserDocument = {
-	//     "id": req.body.documentId
-	//     , "name": req.body.documentName
-	//     , "readAccess" : readAccess
-	//     , "writeAccess" : writeAccess
-	//     , "execAccess" : execAccess
-	//     , "canShare" : canShare
-	// };
-
-	// if (userHasDoc) {
-	//     // if user already has the document, upgrade access if possible
-	//     var upgrading = false;
-
-	//     for (var i = 0; i < user.documentsPriv.length; i++) {
-	// 	if (user.documentsPriv[i].documentId == newUserDocument.id
-	// 	    && user.documentsPriv[i].access < req.body.access) {
-	// 	    upgrading = true;
-
-	// 	    // user should redisplay list of documents
-	// 	    response.reDisplay = true;
-
-	// 	    user.documentsPriv[i].access = parseInt(req.body.access);
-	// 	    user.save();
-		    
-	// 	    // send back  message
-	// 	    response.infos.push("You just upgraded your rights to the document " + newUserDocument.name);
-	// 	    break;
-	// 	}
-	//     }
-	//     if (upgrading) {
-	// 	for (i = 0; i < req.session.userDocuments.length; i++) {
-	// 	    if (req.session.userDocuments[i].id == newUserDocument.id) {
-	// 		// upgrade all we've got
-	// 		req.session.userDocuments[i] = newUserDocument;
-	// 	    }
-	// 	}
-	// 	res.json(response);
-	// 	return;
-	//     }
-	//     // send back duplicate message
-	//     response.infos.push("You already have higher or equal access to the document " + newUserDocument.name);
-	//     res.json(response);	    
-	// } else {	    
-	//     // user should redisplay list of documents
-	//     response.reDisplay = true;
-
-	//     // user doesn't already have access to document
-	//     var newDocPriv = new DocPrivilege();
-	//     newDocPriv.access = parseInt(req.body.access);
-	//     newDocPriv.documentName = req.body.documentName;
-	//     newDocPriv.documentId = req.body.documentId;
-	    
-	//     // save
-	//     newDocPriv.save();
-	    
-	//     // save to user's list of document privileges
-	//     user.documentsPriv.push(newDocPriv);
-	//     user.save(); // save user
-	    
-	//     // add to my session if I don't have the document yet
-	//     req.session.userDocuments.push(newUserDocument);
-	    
-	//     // also send back so user can display in his/her DOM
-	//     response.newDocument = newUserDocument;
-	    
-	//     // send acceptance message to user
-	//     response.infos.push("You just accepted "+
-	// 			(readAccess ? "Read" +
-	// 			 ((!writeAccess && !execAccess) 
-	// 			  ? " ": ", ") :"")+
-	// 			(writeAccess ? "Write" +
-	// 			 (!execAccess ? " ": ", ") : "") +
-	// 			(execAccess ? "Exec " : " ") +
-	// 			"Access to " + req.body.documentName +
-	// 			" from " + req.body.acceptFromUser);
-	//     res.json(response);
-	// }
     });
 
 };
@@ -1372,6 +1264,7 @@ exports.deleteMessage = function(req, res) {
  * @getparam documentId : id of document to open
  */
 exports.openDocument = function(req, res) {
+    console.log("open document called");
     // retrieve the document id from url
     var documentId = req.params.documentId;
 
@@ -1380,6 +1273,7 @@ exports.openDocument = function(req, res) {
 	if (err || !doc) {
 	    req.flash("error", "An Error Occured while trying to open the document");
 	    res.redirect('back');
+        console.log("error");
 	    return;
 	}
 
@@ -1408,7 +1302,7 @@ exports.openDocument = function(req, res) {
 	if (!openDocuments[documentId]) {
 	    openDocuments[documentId] = [req.session.currentUser];
 	}
-	
+    
 	// construct a user document
 	userDoc = {
 	    "id" : documentId
