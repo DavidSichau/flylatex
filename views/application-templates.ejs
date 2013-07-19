@@ -81,8 +81,8 @@
 	  {{#if execAccess}}Exec{{/if}}
 	  <b>Access</b> to <strong>{{documentName}}</strong>
 	  <form onsubmit="return false;">
-	    <button onclick="user_messages.grantAccess('{{fromUser}}','{{documentId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Grant</button>
-	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', {{access}}); $(this).closest('li').remove();" class="pull-right btn btn-danger">Decline</button>
+	    <button onclick="user_messages.grantAccess('{{fromUser}}','{{projectId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Grant</button>
+	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{projectId}}', {{access}}); $(this).closest('li').remove();" class="pull-right btn btn-danger">Decline</button>
 	  </form>
 	</div>
 	{{/if}}      
@@ -94,8 +94,8 @@
 	  {{#if execAccess}}Exec{{/if}}
 	  <b>Access</b> to <strong>{{documentName}}</strong>
 	  <form onsubmit="return false;">
-	    <button onclick="user_messages.acceptAccess('{{fromUser}}', '{{documentId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Accept</button>
-	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', {{access}});$(this).closest('li').remove();" class="btn btn-danger pull-right">Decline</button>
+	    <button onclick="user_messages.acceptAccess('{{fromUser}}', '{{projectId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Accept</button>
+	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{projectId}}', {{access}});$(this).closest('li').remove();" class="btn btn-danger pull-right">Decline</button>
 	  </form>
 	</div>
 	{{/if}}
@@ -117,7 +117,7 @@
 	<strong>Grant</strong>
 	<input type="text" name="userToShare" value="" autocomplete="off" placeholder="Enter Username" data-provide="typeahead" data-purpose="usernames" data-items="4"/>
 	<input type="hidden" name="docName" value="{{docName}}"/>
-	<input type="hidden" name="docId" value="{{docId}}"/>
+	<input type="hidden" name="projectId" value="{{projectId}}"/>
 
 	<input type="hidden" name="read-access" value="false"/>
 	<input type="hidden" name="write-access" value="false"/>
@@ -130,7 +130,7 @@
 	</div>
 	<strong>Access</strong>
 	to document <b>{{docName}}</b>
-	<button type="submit" onclick="docs_manager.shareDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=userToShare]').val(), $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#share-modal').modal('hide');return false;" class="btn btn-primary pull-right">Share</button>
+	<button type="submit" onclick="docs_manager.shareDoc('{{projectId}}', '{{docName}}', $(this).closest('form').find('[name=userToShare]').val(), $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#share-modal').modal('hide');return false;" class="btn btn-primary pull-right">Share</button>
       </form>
     </div>
   </div>
@@ -147,7 +147,7 @@
       <form class="form-vertical" onsubmit="return false;">
 	You are <strong>requesting</strong>
 	<input type="hidden" name="docName" value="{{docName}}"/>
-	<input type="hidden" name="docId" value="{{docId}}"/>
+	<input type="hidden" name="projectId" value="{{projectId}}"/>
 
 	<input type="hidden" name="read-access"
 	       {{#if read}}
@@ -177,7 +177,7 @@
 	</div>
 	<strong>Access</strong>
 	to document <b>{{docName}}</b>
-	<button type="submit" onclick="docs_manager.requestDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#request-access').modal('hide');return false;" class="btn btn-primary pull-right">Send Request</button>
+	<button type="submit" onclick="docs_manager.requestDoc('{{projectId}}', '{{docName}}', $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#request-access').modal('hide');return false;" class="btn btn-primary pull-right">Send Request</button>
       </form>
     </div>
   </div>

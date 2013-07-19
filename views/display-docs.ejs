@@ -50,7 +50,7 @@
             <!-- list of all the user's documents -->
             <% for (var i=0 ; i < userDocuments.length; i++) { %>
                 <li data-doc-id="<%= userDocuments[i].id %>">
-                    <a style="float:left;clear:both" href="/document/<%= userDocuments[i].id %>"><%= userDocuments[i].name %></a>
+                    <a style="float:left;clear:both" href="/document/<%= userDocuments[i].masterId %>"><%= userDocuments[i].name %></a>
                     <div class="btn-group pull-right">
                         <% if (userDocuments[i].readAccess) { %>
                             <button disabled class="btn">Read</button>
@@ -74,12 +74,12 @@
                     <button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
                     style="display:none;" class="close">x</button>
                     <ul class="list-of-subDocuments nav nav-list">
-                        <% if (userDocuments[i].subDocs !== undefined) { for(var j = 0; j < userDocuments[i].subDocs.length; j++) { %>
+                        <% for(var j = 0; j < userDocuments[i].subDocs.length; j++) { %>
                             <li data-subDoc-id="<%= userDocuments[i].subDocs[j].id %>">
                                 <a style="float:left;clear:both" href="/document/<%= userDocuments[i].subDocs[j].id %>"><%= userDocuments[i].subDocs[j].name %></a>    
                             </li>
                         
-                        <% }} %>
+                        <% } %>
                     
                         
                     </ul>

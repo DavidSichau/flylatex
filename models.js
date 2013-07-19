@@ -20,6 +20,7 @@ var DocPrivilege = new Schema ({
     access: {type: Number
 	     , default: 7
 	    }
+    , projectId: ObjectId
     /*
      * 7 - full
      * 6 - read and write
@@ -34,10 +35,15 @@ var DocPrivilege = new Schema ({
      * 2 -> write
      * 1 -> execute
      */
-    , documentId: ObjectId
-    , documentName: String
-    , subDocs: [{id:ObjectId, name:String}]
 });
+
+
+var Project = new Schema ({
+    name: String,
+    masterId: ObjectId,
+    subDocs:[{id:ObjectId,name:String}],
+    usersWithShareAccess: [String] // store userNames of users with full access to doc
+})
 
 
 var User = new Schema ({
@@ -72,7 +78,7 @@ var Message = new Schema ({
      */
     , fromUser: String
     , toUser: String
-    , documentId: ObjectId
+    , projectId: ObjectId
     , documentName: String
     , access: Number // as in DocPrivilege model
     , timeSent: {type: Date
@@ -89,7 +95,6 @@ var Document = new Schema ({
 		 }
 	// latex document -> 0; other types to come
     , documentType: Number 
-    , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
 
 var PDFDoc = new Schema({
@@ -195,6 +200,7 @@ User.pre("save", function(next) {
 // iv) Message
 mongoose.model("User", User);
 mongoose.model("Document", Document);
+mongoose.model("Project", Project);
 mongoose.model("DocPrivilege", DocPrivilege);
 mongoose.model("Message", Message);
 mongoose.model("PDFDoc", PDFDoc);

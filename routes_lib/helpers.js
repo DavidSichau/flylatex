@@ -8,6 +8,14 @@ var mongoose = require("mongoose");
 // import 'needed' models here
 var Document = mongoose.model("Document");
 var DocPrivilege = mongoose.model("DocPrivilege");
+var Project = mongoose.model("Project");
+var PDFDoc = mongoose.model("PDFDoc");
+
+var configs = require("../configs");
+var exec = require("child_process").exec
+, fs = require("fs-extra")
+, util = require("util")
+, path = require("path");
 
 /**
  * Helper function to clone an object (deep copy)
@@ -39,13 +47,11 @@ var loadUser = function(user, callback) {
     obj.userDocumentsPriv = user.documentsPriv;
 
     // user document to send off to front end for display
-    var userDocument = {}, priv;
-
     loadDocuments(user.documentsPriv, function(err, userDocuments){
         obj.userDocuments = userDocuments;
         callback(false, obj);
-    })
-}
+    });
+};
 
 /*
  * Helper function to load all documents of one user
@@ -74,17 +80,29 @@ var loadDocuments = function(documentsPriv, callback) {
                 return;
             }
             else {
-                var userDocument = {}
-                var userDoc = loadDocument(docPriv);
-                for (var key in userDoc) {
-                    userDocument[key] = userDoc[key];
-                }
-                userDocuments.push(userDocument);
+                
+                Project.findOne({
+                    _id: docPriv. projectId
+                }, function(err, project) {
+                    if (err || ! project) {
+                        console.log("error: cannot find project ");
+                        console.log(err);
+                        return;
+                    }
+                    var userDocument = {}
+                    var userDoc = loadProject(project, docPriv.access);
+                    for (var key in userDoc) {
+                        userDocument[key] = userDoc[key];
+                    }
+                    userDocuments.push(userDocument);
+                    // make sure that all documents are loaded
+                    if (++processed == count) {
+                        callback(false , userDocuments);
+                    }
+                
+                });
             }
-            // make sure that all documents are loaded
-            if (++processed == count) {
-                callback(false , userDocuments);
-            }
+
         });
     });
     
@@ -95,19 +113,20 @@ var loadDocuments = function(documentsPriv, callback) {
 /*
  * Helper function to load on single document from the docPriv
  */
-var loadDocument = function(docPriv) {
+var loadProject= function(project, access) {
     var userDocument = {};
     // var priv;
-    userDocument.id = docPriv.documentId;
-    userDocument.name = docPriv.documentName;
-    userDocument.access = docPriv.access;
+    userDocument.id = project._id;
+    userDocument.masterId = project.masterId;
+    userDocument.name = project.name;
+    userDocument.access = access;
     userDocument.subDocs = [];
-    for (var i = 0; i< docPriv.subDocs.length; i++) {
-        userDocument.subDocs.push(docPriv.subDocs[i]);    
+    for (var i = 0; i< project.subDocs.length; i++) {
+        userDocument.subDocs.push(project.subDocs[i]);    
     }
     
     
-    var priv = getPrivileges(docPriv.access);
+    var priv = getPrivileges(access);
     for(var key in priv) {
         userDocument[key] = priv[key];
     }
@@ -172,7 +191,7 @@ var displayErrorsForSignUp = function(res, errors) {
 var searchForDocsInSession = function(documentId, session) {
     if (session.userDocuments !== undefined) {
         for (var i = 0; i < session.userDocuments.length; i++) {
-            if (session.userDocuments[i].id == documentId) {
+            if (session.userDocuments[i].masterId == documentId) {
                 return session.userDocuments[i];
             }
             if (session.userDocuments[i].subDocs !== undefined) {
@@ -195,14 +214,13 @@ var searchForDocsInSession = function(documentId, session) {
  * @param currentUser -> created by
  * @return DocPrivilege -> representing new document
  */
-var createNewDocument = function(docName, currentUser) {
+var createNewDocument = function(docName) {
     // create the document (with some properties)
     var newDoc = new Document();
     var newDocObj = {
         name: docName,
         data: "",
         lastModified: new Date(),
-        usersWithShareAccess: [currentUser],
         documentType: 0 // latex document
     };
 
@@ -215,6 +233,24 @@ var createNewDocument = function(docName, currentUser) {
     return newDoc;
 };
 
+/**
+ * createNewProject
+ * creates a new project
+ * 
+ * @param document -> the master document
+ * @return Project-> The new Project
+ */
+var createNewProject = function(document, username) {
+    var newProject = new Project();
+    newProject.name = document.name;
+    newProject.masterId = document._id;
+    newProject.subDocs = [];
+    newProject.usersWithShareAccess = [username]; 
+    newProject.save();
+    return newProject;
+};
+
+
 
 /**
  * giveUserSharePower
@@ -225,9 +261,9 @@ var createNewDocument = function(docName, currentUser) {
  * @param fromUser -> user to give full access to
  * @param documentId -> document id of document concerned
  */
-var giveUserSharePower = function(fromUser, documentId) {
-    Document.findOne({
-        _id: documentId
+var giveUserSharePower = function(fromUser, projectId) {
+    Project.findOne({
+        _id: projectId
     }, function(err, doc) {
         if (!err) {
             if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
@@ -244,10 +280,90 @@ var giveUserSharePower = function(fromUser, documentId) {
 };
 
 
+var compilePdf = function(dirPath, response, res, masterName) {
+
+    console.log(dirPath);
+
+    var masterPath = path.join(dirPath, masterName + ".txt");
+
+
+    process.chdir(dirPath);
+
+    // copy files from the packages folder
+    // to the temp directory for compiling
+    console.log("From: " + configs.includes.path + "*");
+    console.log("To: " + dirPath + "/");
+    exec("cp -r " + configs.includes.path + "*  " + dirPath + "/", function(err) {
+        if (err) {
+            response.errors.push("Error copying additional packages to use in compilation");
+            return;
+        }
+        // compile the document (or at least try)
+        // redirect the stdin, stderr results of compilation
+        // since the results of compilation will eventually be
+        // written to the log file
+        exec("pdflatex -interaction=nonstopmode " + masterPath + " > /dev/null 2>&1", function(err) {
+            // store the logs for the user here
+            fs.readFile(path.join(dirPath, masterName + ".log"), function(err, data) {
+                if (err) {
+                    response.errors.push("Error while trying to read logs.");
+                }
+
+                // store the 'logs' from the compile
+                response.logs = (data ? data.toString() : "");
+
+                var errorStr = "An error occured before or during compilation";
+                if (err) {
+                    console.log(err);
+                    response.errors.push(errorStr);
+                    res.json(response);
+                    return;
+                }
+
+                // store the compile pdf document in the cloud
+
+                // create new PDFDoc
+                var newpdf = new PDFDoc();
+                newpdf.forDocument = masterName;
+                newpdf.title = masterName + ".pdf";
+                var tempfile = path.join(dirPath, newpdf.title);
+                fs.copy(tempfile, configs.pdfs.path + newpdf.title, function(err) {
+                    if (err) {
+                        console.log(err);
+                        response.errors.push(errorStr);
+                        res.json(response);
+                        return;
+                    }
+                    else {
+                        console.log("Successfully saved " + newpdf.title + " in " + configs.pdfs.path);
+                        newpdf.save(function(err) {
+                            if (err) {
+                                console.log(err);
+                                response.errors.push(errorStr);
+                                res.json(response);
+                                return;
+                            }
+                            response.infos.push("Successfully compiled " + masterName);
+                            // make the compiledDocURI
+                            response.compiledDocURI = "/servepdf/" + masterName;
+                            // send response back to user
+                            res.json(response);
+                        });
+                    }
+                });
+            });
+        });
+
+    });
+};
+
+exports.compilePdf = compilePdf;
 exports.cloneObject = cloneObject;
 exports.loadUser = loadUser;
+exports.loadProject = loadProject;
 exports.displayErrorsForSignUp = displayErrorsForSignUp;
 exports.searchForDocsInSession = searchForDocsInSession;
 exports.createNewDocument = createNewDocument;
+exports.createNewProject= createNewProject;
 exports.giveUserSharePower = giveUserSharePower;
 exports.getPrivileges = getPrivileges;

@@ -74,13 +74,12 @@ function DocsManager() {
      * into pdf and renders the pdf
      * @param id : id of document to compile and render
      */
-    this.compileAndRender = function(documentId, documentName) {
+    this.compileAndRender = function(projectId, projectName, documentId) {
         // first try to save the current document being displayed
         $.ajax({
             type: "POST",
             data: {
                 "documentId": documentId,
-                "documentName": documentName,
                 "documentText": currentDoc.getText()
             },
             url: "/savedoc",
@@ -97,8 +96,8 @@ function DocsManager() {
                 $.ajax({
                     type: "POST",
                     data: {
-                        "documentId": documentId,
-                        "documentName": documentName
+                        "projectId": projectId,
+                        "projectName": projectName
                     },
                     url: "/compiledoc",
                     success: function(response) {
@@ -312,7 +311,7 @@ function DocsManager() {
     
         // default request object
         var requestObj = {
-            docId: id,
+            projectId: id,
             docName: name,
             read: false,
             write: false,
@@ -382,12 +381,12 @@ function DocsManager() {
     };
     
     
-    this.createSubDoc = function(docName, parentId) {
+    this.createSubDoc = function(docName, projectId) {
         $.ajax({
             type: "POST",
             data: {
                 "docName": docName,
-                "parentId" : parentId
+                "projectId" : projectId
             },
             url: "/createSubDoc",
             success: function(response){
@@ -396,7 +395,7 @@ function DocsManager() {
                 if (response.errors.length > 0) {
                     return;
                 }
-                $('[data-doc-id="'+response.newSubDocument.parentId+'"] ul').append(domTargets.singleSubDocEntry(response.newSubDocument));
+                $('[data-doc-id="'+response.newSubDocument.projectId+'"] ul').append(domTargets.singleSubDocEntry(response.newSubDocument));
                 
                 docs_manager.closeCreateSubDocView();
                 
@@ -493,27 +492,29 @@ function DocsManager() {
      * this.deleteDoc
      * delete the document
      */
-    this.deleteDoc = function(docId, docName) {
-        bootbox.confirm("Are you sure you want to delete the document, " + docName + " ?", function(yes) {
+    this.deleteDoc = function(projectId, projectName) {
+        bootbox.confirm("Are you sure you want to delete the project, " + projectName + " ?", function(yes) {
             if (yes) {
                 $.ajax({
                     type: "DELETE",
                     data: {
-                        "docId": docId
+                        "projectId": projectId,
+                        "projectName": projectName
                     },
                     url: "/deletedoc",
                     success: function(response) {
                         // update alerts
                         updateAlerts(response);
 
-                        $(domTargets.documentList).find("li[data-doc-id='" + docId + "']").remove();
+                        $(domTargets.documentList).find("li[data-doc-id='" + projectId+ "']").remove();
+                        $('#parentDocs').find("option[value='" + projectId + "']").remove();
 
                         docs_manager.hideDeleteButtons();
 
                         // remove from openedDocs, openedDocsWriteable
                         // if document was opened
-                        if (openedDocs.indexOf(docId) != -1) {
-                            var i = openedDocs.indexOf(docId);
+                        if (openedDocs.indexOf(projectId) != -1) {
+                            var i = openedDocs.indexOf(projectId);
                             openedDocs.splice(i, 1);
                             openedDocsWriteable.splice(i, 1);
                         }
@@ -534,7 +535,7 @@ function DocsManager() {
     
         // prepend modal to DOM and display
         $(domTargets.bodySecondContainer).prepend(domTargets.shareDocumentBlock({
-            docId: id,
+            projectId: id,
             docName: name
         }));
         $("#share-modal").modal("show");
@@ -552,13 +553,12 @@ function DocsManager() {
      * Save the document in the db
      * 
      */
-    this.saveDoc = function(docId, docName) {
+    this.saveDoc = function(docId) {
         // save the document
         $.ajax({
             type: "POST",
             data: {
                 "documentId": docId,
-                "documentName": docName,
                 "documentText": currentDoc.getText()
             },
             url: "/savedoc",
@@ -571,14 +571,14 @@ function DocsManager() {
 
     /**
      * this.shareDoc
-     * @param docId: id of document to share
+     * @param projectId: id of document to share
      * @param docName: name of document to share
      * @param userToShare: username of the user to share document with
      * @param withReadAccess: grant userToShare read access
      * @param withWriteAccess: grant userToShare write access
      * @param withExecAccess: grant userToShare exec access
      */
-    this.shareDoc = function(docId, docName, userToShare, withReadAccess, withWriteAccess, withExecAccess) {
+    this.shareDoc = function(projectId, docName, userToShare, withReadAccess, withWriteAccess, withExecAccess) {
         var withReadAccess = (withReadAccess === "true");
         var withWriteAccess = (withWriteAccess === "true");
         var withExecAccess = (withExecAccess === "true");
@@ -586,7 +586,7 @@ function DocsManager() {
         // send message to other user notifying him that you want to grant him
         // access to a document
         var options = {
-            "docId": docId,
+            "projectId": projectId,
             "docName": docName,
             "userToShare": userToShare,
             "withReadAccess": withReadAccess,
@@ -604,7 +604,7 @@ function DocsManager() {
      * @param withWriteAccess: request write access
      * @param withExecAccess: request exec access
      */
-    this.requestDoc = function(docId, docName, withReadAccess, withWriteAccess, withExecAccess) {
+    this.requestDoc = function(projectId, docName, withReadAccess, withWriteAccess, withExecAccess) {
     
         var withReadAccess = (withReadAccess === "true");
         var withWriteAccess = (withWriteAccess === "true");
@@ -615,7 +615,7 @@ function DocsManager() {
         // if no user has shareAccess to the document, notify user
         // that no user has shareAccess to that document
         var options = {
-            "docId": docId,
+            "projectId": projectId,
             "docName": docName,
             "withReadAccess": withReadAccess,
             "withWriteAccess": withWriteAccess,
@@ -775,12 +775,12 @@ function UserMessages() {
      * @param documentName - document name of document
      * @param access - access to be granted to fromUser
      */
-    this.grantAccess = function(fromUser, documentId, documentName, access) {
+    this.grantAccess = function(fromUser, projectId, documentName, access) {
 	$.ajax({
 	    type: "POST"
 	    , url: "/grantaccess"
 	    , data: {"userToGrant": fromUser
-		     , "documentId":documentId
+		     , "projectId":projectId
 		     , "documentName":documentName
 		     , "access":access}
 	    , success: function(response) {
@@ -788,7 +788,7 @@ function UserMessages() {
 		updateAlerts(response);
 		
 		// delete the message
-		deleteMessage(fromUser, documentId, access);
+		deleteMessage(fromUser, projectId, access);
 	    }
 	});
     };
@@ -797,36 +797,40 @@ function UserMessages() {
      * acceptAccess ->
      * accept access to document
      * @param fromUser - user granting you access to some document
-     * @param documentId - document id of document
+     * @param projectId - project id of document
      * @param documentName - document name of document
      * @param access - access to be granted to current user
      */
-    this.acceptAccess = function(fromUser, documentId, documentName, access) {
-	$.ajax({
-	    type: "POST"
-	    , url: "/acceptaccess"
-	    , data: {"acceptFromUser":fromUser,
-		     "documentId":documentId, 
-		     "documentName":documentName, 
-		     "access":access}
-	    , success: function(response) {
-		// update alerts
-		updateAlerts(response);
+    this.acceptAccess = function(fromUser, projectId, documentName, access) {
+        $.ajax({
+            type: "POST",
+            url: "/acceptaccess",
+            data: {
+                "acceptFromUser": fromUser,
+                "projectId": projectId,
+                "documentName": documentName,
+                "access": access
+            },
+            success: function(response) {
+                // update alerts
+                updateAlerts(response);
 
-		// delete message
-		deleteMessage(fromUser, documentId, access);
-		
-		if (response.reDisplay) {
-		    $(domTargets.documentList).empty();
+                // delete message
+                deleteMessage(fromUser, projectId, access);
 
-		    // redisplay the entire list of documents
-		    response.userDocuments.forEach(function(item, index) {
-			$(domTargets.documentList)
-			    .append(domTargets.singleDocEntry(item));
-		    });
-		}
-	    }
-	});
+                if (response.reDisplay) {
+                    $(domTargets.documentList).empty();
+
+                    // redisplay the entire list of documents
+                    response.userDocuments.forEach(function(item, index) {
+                        $(domTargets.documentList).append(domTargets.singleDocEntry(item));
+                        item.subDocs.forEach(function(subDoc, index) {
+                            $('[data-doc-id="' + subDoc.projectId + '"] ul').append(domTargets.singleSubDocEntry(subDoc));
+                        });
+                    });
+                }
+            }
+        });
     };
 
     /**
@@ -837,9 +841,9 @@ function UserMessages() {
      * @param documentId -> id of document concerned
      * @param access -> access
      */
-    this.declineAccess = function(fromUser, documentId, access) {
+    this.declineAccess = function(fromUser, projectId, access) {
 	// for now, just delet ethe message
-	deleteMessage(fromUser, documentId, access);
+	deleteMessage(fromUser, projectId, access);
     };
 
 
@@ -847,18 +851,20 @@ function UserMessages() {
      * deleteMessage -
      * delete the message from messages collection
      */
-    var deleteMessage = function(fromUser, documentId, access) {
-	$.ajax({
-	    type: "POST"
-	    , url: "/deletemessage"
-	    , data: {"fromUser":fromUser
-		     , "documentId":documentId
-		     , "access":access}
-	    , success: function(response) {
-		// update alerts
-		updateAlerts(response);
-	    }
-	});
+    var deleteMessage = function(fromUser, projectId, access) {
+        $.ajax({
+            type: "POST",
+            url: "/deletemessage",
+            data: {
+                "fromUser": fromUser,
+                "projectId": projectId,
+                "access": access
+            },
+            success: function(response) {
+                // update alerts
+                updateAlerts(response);
+            }
+        });
     }
 };
 
