@@ -280,7 +280,7 @@ var giveUserSharePower = function(fromUser, projectId) {
 };
 
 
-var compilePdf = function(dirPath, response, res, masterName) {
+var compilePdf = function(dirPath, response, res, masterName, projectId) {
 
     console.log(dirPath);
 
@@ -324,7 +324,7 @@ var compilePdf = function(dirPath, response, res, masterName) {
 
                 // create new PDFDoc
                 var newpdf = new PDFDoc();
-                newpdf.forDocument = masterName;
+                newpdf.forDocument = projectId;
                 newpdf.title = masterName + ".pdf";
                 var tempfile = path.join(dirPath, newpdf.title);
                 fs.copy(tempfile, configs.pdfs.path + newpdf.title, function(err) {

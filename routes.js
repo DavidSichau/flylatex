@@ -1205,7 +1205,7 @@ exports.compileDoc = function(req, res) {
                         }
                         //compile pdf should be only called after all files are written
                         if(++processed === docs.length){
-                            helpers.compilePdf(dirPath, response, res, project.name)
+                            helpers.compilePdf(dirPath, response, res, project.name, project._id)
                         }
                     });
                 }
