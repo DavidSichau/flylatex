@@ -1142,7 +1142,7 @@ exports.servePDF = function(req, res) {
             return;
         }
         // write pdf file to user
-        fs.createReadStream(configs.pdfs.path + doc.title+ ".pdf").pipe(res);
+        fs.createReadStream(configs.pdfs.path + doc.title).pipe(res);
     });
 };
 
