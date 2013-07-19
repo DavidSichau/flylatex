@@ -1129,18 +1129,20 @@ exports.reloadSession = function(req, res) {
  *
  */
 exports.servePDF = function(req, res) {
-    var documentId = req.params.documentId
-    , options;
+    var projectId = req.params.projectId,
+        options;
 
     // find the pdf
-    PDFDoc.findOne({forDocument:documentId}, function(err, doc) {
-	if (err || !doc) {
-	    req.flash("error", "PDF not found or an error occured while reading the pdf");
-	    res.redirect("back");
-	    return;
-	}
-	// write pdf file to user
-	fs.createReadStream(configs.pdfs.path+documentId+".pdf").pipe(res);
+    PDFDoc.findOne({
+        forDocument: projectId
+        }, function(err, doc) {
+        if (err || !doc) {
+            req.flash("error", "PDF not found or an error occured while reading the pdf");
+            res.redirect("back");
+            return;
+        }
+        // write pdf file to user
+        fs.createReadStream(configs.pdfs.path + doc.title+ ".pdf").pipe(res);
     });
 };
 
