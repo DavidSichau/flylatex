@@ -284,7 +284,7 @@ var compilePdf = function(dirPath, response, res, masterName, projectId) {
 
     console.log(dirPath);
 
-    var masterPath = path.join(dirPath, masterName + ".txt");
+    var masterPath = path.join(dirPath, masterName + ".tex");
 
 
     process.chdir(dirPath);
