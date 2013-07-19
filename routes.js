@@ -611,34 +611,31 @@ exports.deleteDoc = function(req, res) {
 
                 // then remove the current userName from the the list of users
                 // with share (full) access, if there
-                // Document.findOne({
-                //     _id: docId
-                // }, function(err, doc) {
-                //     if (!err) {
-                //         var found = false;
-                //         var i; // loop variable
-                //         for (i = 0; i < doc.usersWithShareAccess.length; i++) {
-                //             if (doc.usersWithShareAccess[i] == req.session.currentUser) {
-                //                 found = true;
-                //                 break;
-                //             }
-                //         }
-                //         if (found) {
-                //             doc.usersWithShareAccess.splice(i, 1);
-                //             // save the document
-                //             doc.save();
-                //         }
-                //     }
-                // });
+                Project.findOne({
+                    _id: projectId
+                }, function(err, project) {
+                    if (!err) {
+                        var found = false;
+                        var i; // loop variable
+                        for (i = 0; i < project.usersWithShareAccess.length; i++) {
+                            if (project.usersWithShareAccess[i] == req.session.currentUser) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found) {
+                            project.usersWithShareAccess.splice(i, 1);
+                            // save the document
+                            project.save();
+                        }
+                    }
+                });
             }
-            if (response.errors.length == 0 && docName.length > 0) {
+            if (response.errors.length === 0 && docName.length > 0) {
                 response.infos.push("Successfully deleted the document " + docName);
                 res.json(response);
-
             }
         });
-
-
     });
 };
 
