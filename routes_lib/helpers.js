@@ -345,7 +345,7 @@ var compilePdf = function(dirPath, response, res, masterName, projectId) {
                             }
                             response.infos.push("Successfully compiled " + masterName);
                             // make the compiledDocURI
-                            response.compiledDocURI = "/servepdf/" + masterName;
+                            response.compiledDocURI = "/servepdf/" + projectId;
                             // send response back to user
                             res.json(response);
                         });
