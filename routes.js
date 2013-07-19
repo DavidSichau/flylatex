@@ -1196,7 +1196,7 @@ exports.compileDoc = function(req, res) {
                 }
                 var processed =0;
                 for(var i = 0; i < docs.length; i++) {
-                    var inputPath = path.join(dirPath, docs[i].name+".txt");
+                    var inputPath = path.join(dirPath, docs[i].name+".tex");
                     var docText = docs[i].data;
                     
                     fs.writeFile(inputPath, docText, function(err) {
