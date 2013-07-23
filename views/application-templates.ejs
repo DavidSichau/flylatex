@@ -1,34 +1,43 @@
 <!-- template for a document list item -->
 <script id="doc-li-template" type="text/x-handlebars-template">
-  <li data-doc-id="{{id}}">
-    <a style="float:left;clear:both" href="/document/{{id}}">{{name}}</a>
-    <div class="btn-group pull-right">
-      {{#if readAccess}}
-      <button disabled class="btn">Read</button>
-      {{else}}
-      <button onclick="docs_manager.reqReadAccess('{{id}}', '{{name}}');" class="btn">Read</button>
-      {{/if}}
-      {{#if writeAccess}}
-      <button disabled class="btn">Write</button>
-      {{else}}
-      <button onclick="docs_manager.reqWriteAccess('{{id}}', '{{name}}');" class="btn">Write</button>
-      {{/if}}
-      {{#if execAccess}}
-      <button disabled class="btn">Exec</button> 
-      {{else}}
-      <button onclick="docs_manager.reqExecAccess('{{id}}', '{{name}}');" class="btn">Exec</button>
-      {{/if}}
-      {{#if canShare}}
-      <button class="btn" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');;">Share</button>
-      {{/if}}
-    </div>
-      <button onclick="docs_manager.deleteDoc('{{id}}', '{{name}}');" style="display:none;" class="close">x</button>
-       <ul class="list-of-subDocuments nav nav-list">
-                        
-                        
-        </ul>
-      
-  </li>
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <button onclick="docs_manager.deleteDoc('{{id}}', '{{name}}');"
+            style="display:none;" class="close pull-left">x</button>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#listOfDocuments"
+            href="#{{id}}">  Show Project: {{name}}</a>
+        </div>
+
+        <div id="{{id}}" class="accordion-body collapse">
+            <div class="accordion-inner" data-doc-id="{{id}}">
+                <a style="float:left;clear:both" href="/document/{{id}}">{{name}}</a>
+                <div class="btn-group pull-right">
+                  {{#if readAccess}}
+                  <button disabled class="btn">Read</button>
+                  {{else}}
+                  <button onclick="docs_manager.reqReadAccess('{{id}}', '{{name}}');" class="btn">Read</button>
+                  {{/if}}
+                  {{#if writeAccess}}
+                  <button disabled class="btn">Write</button>
+                  {{else}}
+                  <button onclick="docs_manager.reqWriteAccess('{{id}}', '{{name}}');" class="btn">Write</button>
+                  {{/if}}
+                  {{#if execAccess}}
+                  <button disabled class="btn">Exec</button> 
+                  {{else}}
+                  <button onclick="docs_manager.reqExecAccess('{{id}}', '{{name}}');" class="btn">Exec</button>
+                  {{/if}}
+                  {{#if canShare}}
+                  <button class="btn" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');;">Share</button>
+                  {{/if}}
+                </div>
+                <ul class="list-of-subDocuments nav nav-list">
+                                    
+                                    
+                </ul>
+            </div>  
+        </div>
+  </div>
 </script>
 
 <!-- template for options of subdocs -->

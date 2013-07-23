@@ -493,7 +493,7 @@ function DocsManager() {
      * delete the document
      */
     this.deleteDoc = function(projectId, projectName) {
-        bootbox.confirm("Are you sure you want to delete the project, " + projectName + " ?", function(yes) {
+        bootbox.confirm("Are you sure you want to delete the project: " + projectName + " ?", function(yes) {
             if (yes) {
                 $.ajax({
                     type: "DELETE",
@@ -506,7 +506,7 @@ function DocsManager() {
                         // update alerts
                         updateAlerts(response);
 
-                        $(domTargets.documentList).find("li[data-doc-id='" + projectId+ "']").remove();
+                        $(domTargets.documentList).find("div[data-doc-id='" + projectId+ "']").parent().parent().remove();
                         $('#parentDocs').find("option[value='" + projectId + "']").remove();
 
                         docs_manager.hideDeleteButtons();
@@ -872,7 +872,7 @@ function UserMessages() {
  * Global Variables
  */
 var domTargets = {
-    documentList: "ul.list-of-documents"
+    documentList: "#listOfDocuments"
     , createDocBlock:    "div.documents-section div.create-doc-block"
     , createSubDocBlock: "div.documents-section div.create-subdoc-block"
     , singleDocEntry: Handlebars.compile($("#doc-li-template").html())
