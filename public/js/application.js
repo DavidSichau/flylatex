@@ -1,3 +1,21 @@
+
+
+
+
+
+
+
+$('.documentListing').on('shown hidden', function(e){
+    $(this).parent().find('i').toggleClass('icon-chevron-down icon-chevron-up');
+});
+
+
+
+// $('.accordion').on('show hide', function() {
+//     $(this).css('height', 'auto');
+// });
+
+
 function UserManager() {
     /*
      * logs user out
@@ -302,7 +320,7 @@ function DocsManager() {
         }
         // get current privs the user has
         var privsForDoc = [];
-        $(domTargets.documentList).find("[data-doc-id=" + id + "] button").filter(":disabled").each(function(i, elem) {
+        $(domTargets.documentList).find("[data-doc-id=" + id + "]").parent().parent().find('button').filter(":disabled").each(function(i, elem) {
             privsForDoc.push($(elem).text().toLowerCase());
         });
     
@@ -365,6 +383,7 @@ function DocsManager() {
                 var userDocument = response.newDocument;
 
                 $(domTargets.documentList).append(domTargets.singleDocEntry(userDocument));
+                
                 // also adds the new document to the option menue
                 $('#parentDocs').append(domTargets.optionDocEntry(userDocument));
                 
@@ -872,7 +891,7 @@ function UserMessages() {
  * Global Variables
  */
 var domTargets = {
-    documentList: "#listOfDocuments"
+    documentList: ".list-of-documents"
     , createDocBlock:    "div.documents-section div.create-doc-block"
     , createSubDocBlock: "div.documents-section div.create-subdoc-block"
     , singleDocEntry: Handlebars.compile($("#doc-li-template").html())

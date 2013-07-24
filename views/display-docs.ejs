@@ -5,8 +5,8 @@
             <!-- it should like the errors on the other pages. Be consistent. -->
         </div>
     </div>
-    <div class="documents-section span4">
-        <div class="create-doc-block" style="display:none;">
+    <div class="documents-section span6">
+        <div class="row create-doc-block" style="display:none;">
             <form class="well form-inline" onsubmit="docs_manager.createDoc($(this).find('[name=docName]').val());return false;">
                 <input type="text" name="docName" class="input-medium" placeholder="New Document"
                 />
@@ -14,7 +14,7 @@
             </form>
         </div>
         
-        <div class="create-subdoc-block" style="display:none;">
+        <div class="row create-subdoc-block" style="display:none;">
             <form class="well form-inline" onsubmit="docs_manager.createSubDoc($(this).find('[name=subDocName]').val(),$(this).find('#parentDocs').val());return false;">
                 <input type="text" name="subDocName" class="input-medium" placeholder="New Document" />
                 <select id="parentDocs">
@@ -29,78 +29,88 @@
             </form>
         </div>
         
-        <div class="btn-group pull-right">
-            <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Manage Docs
-                <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-                <li>
-                    <a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Project</a>
-                    <a href="javascript:void(0);" onclick="docs_manager.showDeleteButtons();">Delete Doc</a>
-                    <a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Create New Sub Doc</a>
-                    <a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a>
-                </li>
-            </ul>
+        <div class="row navbar">
+            <div class="navbar-inner">
+                <a class="brand" href="#">My Latex Projects</a>
+                <ul class="nav">
+                    <!--<li><a href="#">Link</a></li>-->
+                </ul>
+                <ul class="nav pull-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Manage Documents
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Project</a></li>
+                            <li><a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Create New Sub Doc</a></li>
+                            <li><a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            
+            </div>
         </div>
-        <div class="list-of-documents nav nav-list">
-            <div class="nav-header">
-                <b>My Latex Documents</b>
-            </div>
-            <div class="spacer5">
-            </div>
+        
+
+        <div class="list-of-documents">
             <!-- remember to set one of the <li>'s to "active" class -->
             <!-- list of all the user's documents -->
-            <div class="accordion" id="listOfDocuments">
-                <% for (var i=0 ; i < userDocuments.length; i++) { %>
-                    <div class="accordion-group">
+            <% for (var i=0 ; i < userDocuments.length; i++) { %>
+                <div class="row"> 
+                
+                    <div class="navbar">
+                        <div class="navbar-inner">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#<%= userDocuments[i].masterId %>"> <i class="icon-chevron-down"></i><strong><%= userDocuments[i].name %></strong> </button>
 
-                    
-                        <div class="accordion-heading">
-                        
-                            <button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" style="display:none;" class="close pull-left">x</button>
-                        
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#listOfDocuments" href="#<%= userDocuments[i].masterId %>">  Show Project: <%= userDocuments[i].name %></a>
+                            <div class="btn-group pull-right">
+                                <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown"> Manage Project <span class="caret"></span> </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <% if (userDocuments[i].canShare) { %>
+                                            <a href="javascript:void(0);" onclick="docs_manager.openShareDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');">Share</a>
+                                        <% } %>
+                                    </li>
+                                    <li> <a href="javascript:void(0);" onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>')">Delete Project</a> </li>
+                                    <li> <a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Create New Sub Doc</a> </li>
+                                </ul>
+                            </div>
                             
-                        </div>
-                        <div id="<%= userDocuments[i].masterId %>" class="accordion-body collapse">
-                            <div class="accordion-inner" data-doc-id="<%= userDocuments[i].id %>">
-                                    <a style="float:left;clear:both" href="/document/<%= userDocuments[i].masterId %>"><%= userDocuments[i].name %></a>
-                                    <div class="btn-group pull-right">
-                                        <% if (userDocuments[i].readAccess) { %>
-                                            <button disabled class="btn">Read</button>
-                                        <% } else { %>
-                                            <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
-                                            class="btn">Read</button>
-                                        <% } if (userDocuments[i].writeAccess) { %>
-                                            <button class="btn" disabled>Write</button>
-                                        <% } else { %>
-                                            <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
-                                            class="btn">Write</button>
-                                        <% } if (userDocuments[i].execAccess) { %>
-                                            <button class="btn" disabled>Exec</button>
-                                        <% } else { %>
-                                            <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
-                                            class="btn">Exec</button>
-                                        <% } if (userDocuments[i].canShare) { %>
-                                            <button class="btn" onclick="docs_manager.openShareDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');">Share</button>
-                                        <% } %>
-                                    </div>
-                                    
-                                    <ul class="list-of-subDocuments nav nav-list">
-                                        <% for(var j = 0; j < userDocuments[i].subDocs.length; j++) { %>
-                                            <li data-subDoc-id="<%= userDocuments[i].subDocs[j].id %>">
-                                                <a style="float:left;clear:both" href="/document/<%= userDocuments[i].subDocs[j].id %>"><%= userDocuments[i].subDocs[j].name %></a>    
-                                            </li>
-                                        <% } %>
-                                        
-                                    </ul>
+                            <div class="btn-group pull-right">
+                                <% if (userDocuments[i].readAccess) { %>
+                                    <button disabled class="btn">Read</button>
+                                <% } else { %>
+                                    <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                                    class="btn">Read</button>
+                                <% } if (userDocuments[i].writeAccess) { %>
+                                    <button class="btn" disabled>Write</button>
+                                <% } else { %>
+                                    <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                                    class="btn">Write</button>
+                                <% } if (userDocuments[i].execAccess) { %>
+                                    <button class="btn" disabled>Exec</button>
+                                <% } else { %>
+                                    <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');"
+                                    class="btn">Exec</button>
+                                <% } %>
                             </div>
                         </div>
                     </div>
-                <% } %>
                 
-                
-            </div>
+                    <div id="<%= userDocuments[i].masterId %>" class="documentListing collapse out">
+                        <div class="" data-doc-id="<%= userDocuments[i].id %>">
+                                <a style="float:left;clear:both" href="/document/<%= userDocuments[i].masterId %>"><strong><%= userDocuments[i].name %></strong></a>
+                                <ul class="list-of-subDocuments nav nav-list">
+                                    <% for(var j = 0; j < userDocuments[i].subDocs.length; j++) { %>
+                                        <li data-subDoc-id="<%= userDocuments[i].subDocs[j].id %>">
+                                            <a style="float:left;clear:both" href="/document/<%= userDocuments[i].subDocs[j].id %>"><%= userDocuments[i].subDocs[j].name %></a>    
+                                        </li>
+                                    <% } %>
+                                </ul>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
         </div>
     </div>
 </div>

@@ -1,43 +1,58 @@
 <!-- template for a document list item -->
 <script id="doc-li-template" type="text/x-handlebars-template">
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <button onclick="docs_manager.deleteDoc('{{id}}', '{{name}}');"
-            style="display:none;" class="close pull-left">x</button>
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#listOfDocuments"
-            href="#{{id}}">  Show Project: {{name}}</a>
-        </div>
+<div class="row"> 
 
-        <div id="{{id}}" class="accordion-body collapse">
-            <div class="accordion-inner" data-doc-id="{{id}}">
-                <a style="float:left;clear:both" href="/document/{{id}}">{{name}}</a>
-                <div class="btn-group pull-right">
-                  {{#if readAccess}}
-                  <button disabled class="btn">Read</button>
-                  {{else}}
-                  <button onclick="docs_manager.reqReadAccess('{{id}}', '{{name}}');" class="btn">Read</button>
-                  {{/if}}
-                  {{#if writeAccess}}
-                  <button disabled class="btn">Write</button>
-                  {{else}}
-                  <button onclick="docs_manager.reqWriteAccess('{{id}}', '{{name}}');" class="btn">Write</button>
-                  {{/if}}
-                  {{#if execAccess}}
-                  <button disabled class="btn">Exec</button> 
-                  {{else}}
-                  <button onclick="docs_manager.reqExecAccess('{{id}}', '{{name}}');" class="btn">Exec</button>
-                  {{/if}}
-                  {{#if canShare}}
-                  <button class="btn" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');;">Share</button>
-                  {{/if}}
-                </div>
-                <ul class="list-of-subDocuments nav nav-list">
-                                    
-                                    
+    <div class="navbar">
+        <div class="navbar-inner">
+            <button class="btn btn-link" data-toggle="collapse" data-target="#{{masterId}}"> <i class="icon-chevron-down"></i><strong>{{name}}</strong> </button>
+
+            <div class="btn-group pull-right">
+                <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown"> Manage Project <span class="caret"></span> </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        {{#if canShare}}
+                            <a href="javascript:void(0);" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');">Share</a>
+                        {{/if}}
+                    </li>
+                    <li> <a href="javascript:void(0);" onclick="docs_manager.deleteDoc('{{id}}', '{{name}}')">Delete Project</a> </li>
+                    <li> <a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Create New Sub Doc</a> </li>
                 </ul>
-            </div>  
+            </div>
+            
+            <div class="btn-group pull-right">
+                {{#if readAccess}}
+                    <button disabled class="btn">Read</button>
+                {{else}}
+                    <button onclick="docs_manager.reqReadAccess('{{id}}', '{{name}}');"
+                    class="btn">Read</button>
+                {{/if}}
+                {{#if writeAccess}}
+                    <button class="btn" disabled>Write</button>
+                {{else}}
+                    <button onclick="docs_manager.reqWriteAccess('{{id}}', '{{name}}');"
+                    class="btn">Write</button>
+                {{/if}}
+                {{#if execAccess}}
+                    <button class="btn" disabled>Exec</button>
+                {{else}}
+                    <button onclick="docs_manager.reqExecAccess('{{id}}', '{{name}}');"
+                    class="btn">Exec</button>
+                {{/if}}
+            </div>
         </div>
-  </div>
+    </div>
+
+    <div id="{{masterId}}" class="documentListing collapse">
+        <div class="" data-doc-id="{{id}}">
+                <a style="float:left;clear:both" href="/document/{{masterId}}"><strong>{{name}}</strong></a>
+                <ul class="list-of-subDocuments nav nav-list">
+                
+                </ul>
+        </div>
+    </div>
+</div>
+
+
 </script>
 
 <!-- template for options of subdocs -->
