@@ -10,12 +10,6 @@ $('.list-of-documents').on('shown hidden','.documentListing', function(e){
 });
 
 
-
-// $('.accordion').on('show hide', function() {
-//     $(this).css('height', 'auto');
-// });
-
-
 function UserManager() {
     /*
      * logs user out
@@ -669,7 +663,10 @@ function DocsManager() {
 	    .find('input').attr("value", "");
     };
     
-    this.openCreateSubDocView = function() {
+    this.openCreateSubDocView = function(projectId) {
+        if(projectId != undefined) {
+            $("#parentDocs option[value='"+projectId+"']").prop('selected',true);
+        }
         $(domTargets.createSubDocBlock).show();
     };
     
