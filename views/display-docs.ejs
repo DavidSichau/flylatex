@@ -57,7 +57,7 @@
             <!-- remember to set one of the <li>'s to "active" class -->
             <!-- list of all the user's documents -->
             <% for (var i=0 ; i < userDocuments.length; i++) { %>
-                <div class="row"> 
+                <div class="row box"> 
                 
                     <div class="navbar">
                         <div class="navbar-inner">
@@ -98,7 +98,7 @@
                     </div>
                 
                     <div id="<%= userDocuments[i].masterId %>" class="documentListing collapse out">
-                        <div class="" data-doc-id="<%= userDocuments[i].id %>">
+                        <div class="documentListingInner" data-doc-id="<%= userDocuments[i].id %>">
                                 <a style="float:left;clear:both" href="/document/<%= userDocuments[i].masterId %>"><strong><%= userDocuments[i].name %></strong></a>
                                 <ul class="list-of-subDocuments nav nav-list">
                                     <% for(var j = 0; j < userDocuments[i].subDocs.length; j++) { %>

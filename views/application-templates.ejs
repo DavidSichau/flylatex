@@ -1,6 +1,6 @@
 <!-- template for a document list item -->
 <script id="doc-li-template" type="text/x-handlebars-template">
-<div class="row"> 
+<div class="row box"> 
 
     <div class="navbar">
         <div class="navbar-inner">
@@ -43,7 +43,7 @@
     </div>
 
     <div id="{{masterId}}" class="documentListing collapse">
-        <div class="" data-doc-id="{{id}}">
+        <div class="documentListingInner" data-doc-id="{{id}}">
                 <a style="float:left;clear:both" href="/document/{{masterId}}"><strong>{{name}}</strong></a>
                 <ul class="list-of-subDocuments nav nav-list">
                 

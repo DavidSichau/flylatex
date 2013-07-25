@@ -4,8 +4,8 @@
 
 
 
-
-$('.documentListing').on('shown hidden', function(e){
+// changes the symbol of the opening of the class
+$('.list-of-documents').on('shown hidden','.documentListing', function(e){
     $(this).parent().find('i').toggleClass('icon-chevron-down icon-chevron-up');
 });
 
