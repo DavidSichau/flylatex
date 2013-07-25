@@ -44,7 +44,10 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Project</a></li>
-                            <li><a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Create New Sub Doc</a></li>
+                            <% if (userDocuments.length > 0) { %>
+                            <li><a href="javascript:void(0);" onclick="docs_manager.openCreateSubDocView();"> Add Doc</a></li>
+                            <% } %>
+                            
                             <li><a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a></li>
                         </ul>
                     </li>
