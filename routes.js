@@ -6,7 +6,6 @@
 var mongoose = require("mongoose")
 , Schema = mongoose.Schema
 , ObjectId = Schema.ObjectId
-, app= require("./app")
 , global = require("./routes_lib/global")
 
 
@@ -96,11 +95,9 @@ var openDocuments = {};
  */
 exports.preIndex = function(req, res, next) {
     console.log("pre index called");
-    console.log(req.session.errorMessage);
     if ((req.body.username == undefined && req.body.password == undefined) || (req.body.username.length == 0 && req.body.password.length == 0)) {
         // user's chilling, makes no attempt to log in
         next();
-
         // seperated the two conditions to make things
         // a lil bit clearer
     }
@@ -913,27 +910,24 @@ exports.grantAccess = function(req, res) {
                 res.json(response);
                 return;
             }
+            
             var priv = helpers.getPrivileges(parseInt(req.body.access));
             if (priv.canShare) {
                 // give user R, W, X access
                 helpers.giveUserSharePower(req.body.userToGrant, req.body.projectId);
             }
 
-            // this method either updates or inserts the new object but only if access is larger than current
+            // this method either updates or inserts the new object
             DocPrivilege.update({
                 _id: {
                     $in: user.documentsPriv
                 },
                 projectId: req.body.projectId,
-                access: {$lt: parseInt(req.body.access)} 
+                access: {$lt: req.body.access}
             }, {
                 $set: {
-                    access: parseInt(req.body.access),
-                    documentName: req.body.documentName,
-                    projectId: req.body.projectId
+                    access: parseInt(req.body.access)
                 }
-            }, {
-                upsert: true
             }, function(err, numberUpdated, rawData) {
                 if (err) {
                     console.log("Error occured during DocPiv update: " + err);
@@ -951,10 +945,6 @@ exports.grantAccess = function(req, res) {
                     if (rawData.updatedExisting) {
                         response.infos.push("You just upgraded the privileges of " + req.body.userToGrant + " for the document " + req.body.documentName);
                     }
-                    else {
-                        response.infos.push("You just granted " + req.body.userToGrant + "new privileges for the document " + req.body.documentName);
-                    }
-                    // response.reloadDocs = true;
                     newUserDocument.forUser = req.body.userToGrant;
                     global.io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
                     res.json(response);
@@ -987,20 +977,30 @@ exports.acceptAccess = function(req, res) {
     // make sure the privilege to accept is at least read privilege
     if (parseInt(req.body.access) < 4) {
         response.errors.push("You should accept at least 'Read' privilege");
-        req.json(response);
+        res.json(response);
+        return;
     }
+    
+    var userHasDoc = false;
+    req.session.userDocuments.forEach(function(item, index) {
+        if (item.id == req.body.projectId) {
+            userHasDoc = true;
+        }
+        
+        if (userHasDoc && item.access >= req.body.access){
+            response.infos.push("You have already higher access to the document");
+            response.reDisplay = true;
+            res.json(response);
+            return;
+        }
+    });
+    
 
     User.findOne({
         userName: req.session.currentUser
     }, function(err, user) {
         // first make sure the user doesn't already have some access to the document
         // in that case, bump up the user's access
-        var userHasDoc = false;
-        req.session.userDocuments.forEach(function(item, index) {
-            if (item.id == req.body.documentId) {
-                userHasDoc = true;
-            }
-        });
 
         var priv = helpers.getPrivileges(req.body.access);
         // give user power to be able to share the document with other users
@@ -1018,14 +1018,12 @@ exports.acceptAccess = function(req, res) {
             _id: {
                 $in: user.documentsPriv
             },
-            projectId: req.body.projectId,
-            access: {
-                $lt: parseInt(req.body.access)
-            }
+            projectId: req.body.projectId
         }, {
             $set: {
                 access: parseInt(req.body.access),
-                projectId: req.body.projectId}
+                projectId: req.body.projectId
+            }
         }, {
             upsert: true
         }, function(err, numberUpdated, rawData) {
@@ -1093,7 +1091,6 @@ exports.reloadSession = function(req, res) {
                 }
                 // load userDocuments
                 response.userDocuments = req.session.userDocuments;
-                console.log(response.userDocuments);
                 res.json(response);
             });
 
