@@ -904,7 +904,7 @@ var domTargets = {
     , lastSavedSpan: "#header #last-saved-time"
     , currentUserName: "#current-user-name"
     , viewLogsButton : ".pdf-render #view-logs"
-    , popoverContent :  ".popover-content p .main-content"
+    , popoverContent :  ".popover-content .main-content"
 };
 
 
