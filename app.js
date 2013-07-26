@@ -33,8 +33,9 @@ app.configure(function(){
     app.use(express.methodOverride());
     app.use(express.cookieParser());
     app.use(express.session({
-	secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
-        store: new MongoStore(configs.db)
+	    secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
+        store: new MongoStore(configs.db),
+        maxAge: 24 * 60 * 60 * 1000// max age of session is one day
     }));
     app.use(app.router);
     app.use(express.static(__dirname + '/public'));
@@ -48,7 +49,7 @@ app.configure(function(){
 app.configure('development', function(){
     app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
     var edt = require('express-debug');
-    edt(app, {/* settings */});
+    edt(app, {panels: ['nav','locals', 'request', 'session', 'template', 'software_info', 'profile']});
 });
 
 app.configure('production', function(){
@@ -75,51 +76,51 @@ app.get('/signup', routes.displaySignUpForm);
 app.post('/signup', routes.processSignUpData);
 
 // for creating a new document
-app.put('/createdoc', routes.createDoc);
+app.put('/createdoc', routes.isUserLoggedIn, routes.createDoc);
 
-app.post('/createSubDoc', routes.createSubDoc);
+app.post('/createSubDoc', routes.isUserLoggedIn, routes.createSubDoc);
 
 // for deleting a document
-app.del('/deletedoc', routes.deleteDoc);
+app.del('/deletedoc', routes.isUserLoggedIn, routes.deleteDoc);
 
 // for sharing access to a document
-app.post('/shareaccess', routes.shareAccess);
+app.post('/shareaccess', routes.isUserLoggedIn, routes.shareAccess);
 
 // for requesting access to a document
-app.post('/requestaccess', routes.requestAccess);
+app.post('/requestaccess', routes.isUserLoggedIn, routes.requestAccess);
 
 // for requesting auto-complete data
 app.get('/autocomplete', routes.ajaxAutoComplete); 
 
 // for getting messages for a user
-app.get('/showmessages', routes.getMessages);
+app.get('/showmessages', routes.isUserLoggedIn, routes.getMessages);
 
 // for granting access to a document
-app.post('/grantaccess', routes.grantAccess);
+app.post('/grantaccess', routes.isUserLoggedIn, routes.grantAccess);
 
 // for accepting invitation to have access to a document
-app.post('/acceptaccess', routes.acceptAccess);
+app.post('/acceptaccess', routes.isUserLoggedIn, routes.acceptAccess);
 
 // add a new document to my list of sessions
-app.post('/adddoctosession', routes.addNewDocument);
+app.post('/adddoctosession', routes.isUserLoggedIn, routes.addNewDocument);
 
 // reload the documents in the session of the current user
-app.post('/reloadsession', routes.reloadSession);
+app.post('/reloadsession', routes.isUserLoggedIn, routes.reloadSession);
 
 // delete a message
-app.post('/deletemessage', routes.deleteMessage);
+app.post('/deletemessage', routes.isUserLoggedIn, routes.deleteMessage);
 
 // load a document
-app.get('/document/:documentId', routes.preIndex, routes.openDocument);
+app.get('/document/:documentId', routes.isUserLoggedIn, routes.openDocument);
 
 // save the text for a document
-app.post('/savedoc', routes.saveDocument);
+app.post('/savedoc',routes.isUserLoggedIn, routes.saveDocument);
 
 // compile the latex document
-app.post('/compiledoc', routes.compileDoc);
+app.post('/compiledoc',routes.isUserLoggedIn, routes.compileDoc);
 
 // for serving pdf's for documents with specific id's
-app.get('/servepdf/:projectId', routes.servePDF);
+app.get('/servepdf/:projectId',routes.isUserLoggedIn, routes.servePDF);
 
 
 /** end of ROUTES */

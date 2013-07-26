@@ -66,7 +66,7 @@ var openDocuments = {};
 // ==================================================
 
 
-/*
+/**
  * About rendering:
  * the object to pass to the template being rendered has to have:
  * ===== title ======
@@ -96,13 +96,13 @@ var openDocuments = {};
  */
 exports.preIndex = function(req, res, next) {
     console.log("pre index called");
+    console.log(req.session.errorMessage);
     if ((req.body.username == undefined && req.body.password == undefined) || (req.body.username.length == 0 && req.body.password.length == 0)) {
         // user's chilling, makes no attempt to log in
         next();
 
         // seperated the two conditions to make things
         // a lil bit clearer
-
     }
     else if (req.session.currentUser && req.session.isLoggedIn) {
         // user's already logged in, so go on
@@ -167,7 +167,7 @@ exports.preIndex = function(req, res, next) {
 
 
 
-/*
+/**
  * processSignUpData ->
  *  processes the sign up data posted from the sign
  *  up form and logs the user into fly latex
@@ -268,6 +268,28 @@ exports.processSignUpData = function(req, res) {
     }
 };
 
+/**
+ * isUserLoggedIn
+ * this function is used to check if an user is logged in and otherwise redirects to home
+ * @param req -> request object
+ * @param res -> response object
+ * @param next -> the next function which should be called
+ */
+exports.isUserLoggedIn = function(req, res, next) {
+    if (!(req.session.isLoggedIn && req.session.currentUser)) {
+        // user is not logged in
+        res.render("not-logged-in", {
+            title: "Log Into/Sign Into to FLY LATEX!",
+            shortTitle: "FLY LATEX",
+            tagLine: "Real Time Collaborative editor in node-js",
+            fileSpecificStyle: "not-logged-in.css",
+            error: "You are not logged in. Please log in!" 
+        });
+    } else {
+        next();
+    }
+}
+
 
 exports.createSubDoc = function(req, res) {
     console.log("createSubDoc called");
@@ -288,12 +310,6 @@ exports.createSubDoc = function(req, res) {
     if (!(docName.length && docName.length > 0)) {
         // check that document's name is not empty
         response.errors.push("Error in creating document with no title or name");
-        res.json(response);
-        return;
-    }
-    else if (!(req.session.isLoggedIn && req.session.currentUser)) {
-        // user is not logged in
-        response.errors.push("You're not not logged in. Please log in!");
         res.json(response);
         return;
     }
@@ -415,12 +431,6 @@ exports.createDoc = function(req, res) {
         res.json(response);
         return;
     }
-    else if (!(req.session.isLoggedIn && req.session.currentUser)) {
-        // user is not logged in
-        response.errors.push("You're not not logged in. Please log in!");
-        res.json(response);
-        return;
-    }
 
     // check the list of documents
     // verify that this new document doesn't
@@ -528,11 +538,6 @@ exports.deleteDoc = function(req, res) {
     var projectId= req.body.projectId;
     var docName = req.body.projectName;
 
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-        response.errors.push("Weird. Seems like you're not logged in.");
-        res.json(response);
-        return;
-    }
     // remove the document from Users collections
     User.findOne({
         userName: req.session.currentUser
@@ -661,9 +666,6 @@ exports.shareAccess = function(req, res) {
     var priv = ((options.withReadAccess == "true" ? 4 : 0) + (options.withWriteAccess == "true" ? 2 : 0) + (options.withExecAccess == "true" ? 1 : 0));
 
     // try to return error messages if any errors found
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-        response.errors.push("You are not logged in. So you can't share access");
-    }
     if (priv == 0) {
         response.errors.push("You can't try to share no privilege Dude/Dudette");
     }
@@ -779,9 +781,6 @@ exports.requestAccess = function(req, res) {
     var priv = ((options.withReadAccess == "true" ? 4 : 0) + (options.withWriteAccess == "true" ? 2 : 0) + (options.withExecAccess == "true" ? 1 : 0));
 
     // try to return error messages if any errors found
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-        response.errors.push("You are not logged in. So you can't share access");
-    }
     if (priv == 0) {
         response.errors.push("You can't try to request for no privilege");
     }
@@ -900,16 +899,6 @@ exports.grantAccess = function(req, res) {
 
     console.log("grantAccess called");
 
-    /**
-     * options passed in: userToGrant, documentId, documentName, access
-     */
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-        response.errors.push("You cannot grant access since you are not logged in.");
-        res.json(response);
-        return;
-    }
-
-
     User.findOne({
         userName: req.body.userToGrant
     }, function(err, user) {
@@ -994,14 +983,6 @@ exports.acceptAccess = function(req, res) {
         userDocuments: req.session.userDocuments
     };
 
-    /**
-     * options passed in: acceptFromUser, projectId, documentName, access
-     */
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-        response.errors.push("You cannot accept the invitation since you aren't logged in");
-        res.json(response);
-        return;
-    }
 
     // make sure the privilege to accept is at least read privilege
     if (parseInt(req.body.access) < 4) {
@@ -1095,15 +1076,13 @@ exports.acceptAccess = function(req, res) {
  */
 exports.reloadSession = function(req, res) {
     console.log("reload session called");
-    var response = {infos: [], errors: [], userDocuments: null};
-    
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-        response.errors.push("You are not logged in.");
-        res.json(response);
-        return;
+    var response = {
+        infos: [],
+        errors: [],
+        userDocuments: null
+    };
 
-    }
-    else if (req.session.currentUser == req.body.document.forUser) {
+    if (req.session.currentUser == req.body.document.forUser) {
         User.findOne({
             userName: req.session.currentUser
         }, function(err, user) {
@@ -1120,7 +1099,7 @@ exports.reloadSession = function(req, res) {
 
         });
     }
-    };
+};
 
 /**
  * exports.servePDF ->
@@ -1157,13 +1136,6 @@ exports.compileDoc = function(req, res) {
     var response = {infos:[], errors: [], logs:"", compiledDocURI:null};
     var projectId= req.body.projectId;
 
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-	    response.errors.push("You are not logged in");
-	    res.json(response);
-	    return;
-    } 
-    
-    
     Project.findOne({
         _id: projectId
     }, function(err, project) {
@@ -1214,101 +1186,6 @@ exports.compileDoc = function(req, res) {
 	        });
         });
     });
-    /*
-    // first load the text of the document from the database
-    Document.findOne({_id:documentId}, function(err, doc) {
-	if (err || !doc) {
-	    response.errors.push("An Error Occured while trying to open the document");
-	    res.json(response);
-	    return;
-	}
-
-	// get the document text
-	var docText = doc.data;
-
-	// make temporary directory to create and compile latex pdf
-	temp.mkdir("pdfcreator", function(err, dirPath){
-	    var inputPath = path.join(dirPath, documentId+".tex");
-	    
-	    fs.writeFile(inputPath, docText, function(err) {
-		if (err) {
-		    response.errors.push("An error occured even before compiling");
-		    res.json(response);
-		    return;
-		}
-		process.chdir(dirPath);
-
-		// copy files from the packages folder
-		// to the temp directory for compiling
-		console.log("From: " + configs.includes.path+"*");
-		console.log("To: " + dirPath+"/");
-		exec("cp -r " + configs.includes.path+"*  " + dirPath+"/", function(err) {
-		    if (err) {
-			response.errors.push("Error copying additional packages to use in compilation");
-			return;
-		    } 
-		    // compile the document (or at least try)
-		    // redirect the stdin, stderr results of compilation
-		    // since the results of compilation will eventually be
-		    // written to the log file
-		    exec("pdflatex -interaction=nonstopmode "+ inputPath +" > /dev/null 2>&1", function(err) {
-			// store the logs for the user here
-			fs.readFile(path.join(dirPath, documentId+".log"), function(err, data){
-			    if (err) {
-				response.errors.push("Error while trying to read logs.");
-			    }
-			    
-			    // store the 'logs' from the compile
-			    response.logs = (data ? data.toString() : "");
-			    
-			    var errorStr = "An error occured before or during compilation";
-			    if (err) {
-				console.log(err);
-				response.errors.push(errorStr);
-				res.json(response);
-				return;
-			    }
-			    
-			    // store the compile pdf document in the cloud
-			    
-			    // create new PDFDoc
-			    var newpdf = new PDFDoc();
-			    newpdf.forDocument = documentId;
-			    newpdf.title = documentId+".pdf";
-			    tempfile = path.join(dirPath, newpdf.title);
-			    fs.copy(tempfile
-				    , configs.pdfs.path + newpdf.title
-				    , function(err){
-					if (err) {
-					    console.log(err);
-					    response.errors.push(errorStr);
-					    res.json(response);
-					    return;
-					} else {
-					    console.log("Successfully saved "+newpdf.title+" in "+configs.pdfs.path);
-					    newpdf.save(function(err) {
-						if (err) {
-						    console.log(err);
-						    response.errors.push(errorStr);
-						    res.json(response);
-						    return;
-						}
-						response.infos.push("Successfully compiled "+ req.body.documentName);
-						// make the compiledDocURI
-						response.compiledDocURI = "/servepdf/"+documentId;
-						// send response back to user
-						res.json(response);
-			    		    });
-					}
-				    });
-			});
-		    });
-		});
-	    });
-	});
-    });
-    
-    */
 };
 
 
@@ -1323,10 +1200,6 @@ exports.compileDoc = function(req, res) {
 exports.deleteMessage = function(req, res) {
     var response = {infos:[], errors:[]};
 
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-	response.errors.push("Ya not logged in");
-	res.json(response);
-    } else {
 	Message.findOne({fromUser: req.body.fromUser
 			 , projectId: req.body.projectId
 			 , access: parseInt(req.body.access)
@@ -1339,7 +1212,6 @@ exports.deleteMessage = function(req, res) {
 		console.log("Error while deleting a message");
 	    }
 	});
-    }
 };
 
 /**
@@ -1376,6 +1248,8 @@ exports.openDocument = function(req, res) {
 	docInSession = helpers.searchForDocsInSession(documentId, req.session);	
 	// handle lag in findOne callback execution
 	if (docInSession == null) {
+        req.session.errorMessage = "You do not have the right to access the document";
+        res.redirect('back');
 	    return;
 	}
 	

@@ -91,31 +91,31 @@
     <div class="container second-container">
       <!-- display single info message here -->
       <% if (typeof info !== "undefined" && info != "")  { %>
-      <div class="alert alert-info">
-	<button class="close" data-dismiss="alert">x</button>
-	<%= info %>
-      </div>
+          <div class="alert alert-info">
+    	    <button class="close" data-dismiss="alert">x</button>
+    	    <%= info %>
+          </div>
       <% } %>
       <!-- end of display of single info message here -->
       
       <!-- display single error message here -->
       <% if (typeof error !== "undefined" && error != "")  { %>
-      <div class="alert alert-error">
-	<button class="close" data-dismiss="alert">x</button>
-	<%= error %>
-      </div>
+          <div class="alert alert-error">
+    	    <button class="close" data-dismiss="alert">x</button>
+    	    <%= error %>
+          </div>
       <% } %>	
       <!-- end of display of single error message here -->
       
       <!-- display info messages here -->
       <% if (typeof infos === "object" && typeof infos.length === "undefined") { %>
       <div class="alert alert-info">
-	<button class="close" data-dismiss="alert">x</button>
-	<ul>
-	<% for (key in infos) { %>
-	  <li><b><%= key %></b> : <%= infos[key] %></li>
-	<% } %>
-	</ul>
+    	<button class="close" data-dismiss="alert">x</button>
+    	<ul>
+    	<% for (key in infos) { %>
+    	  <li><b><%= key %></b> : <%= infos[key] %></li>
+    	<% } %>
+    	</ul>
       </div>
       <% } %>
       <!-- end of display of info messages here -->
@@ -123,12 +123,12 @@
       <!-- display error messages here -->
       <% if (typeof errors === "object" && typeof errors.length === "undefined") { %>
       <div class="alert alert-error">
-	<button class="close" data-dismiss="alert">x</button>
-	<ul>
-	<% for (key in errors) { %>
-	  <li><b><%= key %></b> : <%= errors[key] %></li>
-	<% } %>
-	</ul>
+    	<button class="close" data-dismiss="alert">x</button>
+    	<ul>
+    	<% for (key in errors) { %>
+    	  <li><b><%= key %></b> : <%= errors[key] %></li>
+    	<% } %>
+    	</ul>
       </div>
       <% } %>
       <!-- end of display of error messages -->

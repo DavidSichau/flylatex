@@ -14,9 +14,9 @@ exports.index = function(req, res, err) {
     req.session.userDocuments = (req.session.userDocuments == undefined ? [] : req.session.userDocuments);
     
     // delete the session such that after an reload the messages are deleted
-    var errorMessages = req.session.errorMessage;
+    var errorMessage = req.session.errorMessage;
     delete req.session.errorMessage;
-    var infoMessages = req.session.infoMessage;
+    var infoMessage = req.session.infoMessage;
     delete req.session.infoMessage;
     
     if (req.session.currentUser && req.session.isLoggedIn) {
@@ -24,11 +24,13 @@ exports.index = function(req, res, err) {
         res.render("display-docs", {
             title: "Fly Latex: Start Editing Documents",
             shortTitle: "Fly Latex",
-            tagLine: "Start Editing Documents with Your Peeps!",
+            tagLine: "Start Editing Documents with Your Peers!",
             fileSpecificScript: "application.js",
             currentUser: req.session.currentUser,
             isLoggedIn: req.session.isLoggedIn,
-            userDocuments: req.session.userDocuments
+            userDocuments: req.session.userDocuments,
+            info: infoMessage,
+            error: errorMessage
         });
 
     }
@@ -39,8 +41,8 @@ exports.index = function(req, res, err) {
             shortTitle: "FLY LATEX",
             tagLine: "Real Time Collaborative editor in node-js",
             fileSpecificStyle: "not-logged-in.css",
-            info: infoMessages,
-            error: errorMessages
+            info: infoMessage,
+            error: errorMessage
         });
     }
 };
