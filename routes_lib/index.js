@@ -12,8 +12,13 @@ exports.index = function(req, res, err) {
     req.session.isLoggedIn = (req.session.isLoggedIn == undefined ? false : req.session.isLoggedIn);
 
     req.session.userDocuments = (req.session.userDocuments == undefined ? [] : req.session.userDocuments);
-
-
+    
+    // delete the session such that after an reload the messages are deleted
+    var errorMessages = req.session.errorMessage;
+    delete req.session.errorMessage;
+    var infoMessages = req.session.infoMessage;
+    delete req.session.infoMessage;
+    
     if (req.session.currentUser && req.session.isLoggedIn) {
         // display the documents for user
         res.render("display-docs", {
@@ -33,7 +38,9 @@ exports.index = function(req, res, err) {
             title: "Log Into/Sign Into to FLY LATEX!",
             shortTitle: "FLY LATEX",
             tagLine: "Real Time Collaborative editor in node-js",
-            fileSpecificStyle: "not-logged-in.css"
+            fileSpecificStyle: "not-logged-in.css",
+            info: infoMessages,
+            error: errorMessages
         });
     }
 };

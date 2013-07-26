@@ -6,16 +6,27 @@
  */
 
 var express = require('express')
-, app = module.exports = express.createServer()
+, engine = require('ejs-locals')
 , sharejs = require('share').server
 , routes = require('./routes') 
 , configs = require('./configs')
+, global = require("./routes_lib/global")
+, http = require('http')
 , MongoStore = require('connect-mongo')(express);
+
+
+var app = express();
+var server = http.createServer(app);
+global.io = require("socket.io").listen(server, {log:false});
+
+
+
 
 
 
 // Global server Configuration
 app.configure(function(){
+    app.engine('ejs', engine);
     app.set('views', __dirname + '/views');
     app.set('view engine', 'ejs');
     app.use(express.bodyParser());
@@ -27,17 +38,17 @@ app.configure(function(){
     }));
     app.use(app.router);
     app.use(express.static(__dirname + '/public'));
-}).dynamicHelpers({
-    info: function(req, res) {
-	return req.flash('info');
-    },
-    error: function(req, res) {
-	return req.flash('error');
-    }
+    
+    
+    app.locals({
+      _layoutFile: true
+    })
 });
 
 app.configure('development', function(){
     app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+    var edt = require('express-debug');
+    edt(app, {/* settings */});
 });
 
 app.configure('production', function(){
@@ -115,6 +126,9 @@ app.get('/servepdf/:projectId', routes.servePDF);
 
 
 // open a port for this server
-app.listen((process.env.PORT || 3000), function(){
-    console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+server.listen((process.env.PORT || 3000), function(){
+    console.log("Express server listening on port %d in %s mode", server.address().port, app.settings.env);
 });
+
+
+exports.server = server;

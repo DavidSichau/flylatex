@@ -6,8 +6,10 @@
 var mongoose = require("mongoose")
 , Schema = mongoose.Schema
 , ObjectId = Schema.ObjectId
-, app = require("./app")
-, io = require("socket.io").listen(app, {log:false})
+, app= require("./app")
+, global = require("./routes_lib/global")
+
+
 
 // load configurations here
 , configs = require("./configs")
@@ -93,6 +95,7 @@ var openDocuments = {};
  * @param next -> next (middleware) function (in callchain) to execute
  */
 exports.preIndex = function(req, res, next) {
+    console.log("pre index called");
     if ((req.body.username == undefined && req.body.password == undefined) || (req.body.username.length == 0 && req.body.password.length == 0)) {
         // user's chilling, makes no attempt to log in
         next();
@@ -122,13 +125,13 @@ exports.preIndex = function(req, res, next) {
 
             if (!user || typeof user.authenticate != "function") {
                 // is user even in db ? 
-                req.flash("error", "There's no user called " + req.body.username + " in our database");
+                req.session.errorMessage = "There's no user called " + req.body.username + " in our database";
                 res.redirect('back');
                 return;
             }
             else if (!user.authenticate(req.body.password)) {
                 // user's password incorrect
-                req.flash('error', "Password does not match Username entered");
+                req.session.errorMessage = "Password does not match Username entered";
                 res.redirect('back');
                 return;
             }
@@ -155,7 +158,7 @@ exports.preIndex = function(req, res, next) {
         // user's trying to log in, but didn't enter both username
         // and password
         if (!(req.body.username && req.body.password)) {
-            req.flash('error', "Enter both a username and password");
+            req.session.infoMessage =  "Enter both a username and password";
             res.redirect('back');
             return;
         }
@@ -362,7 +365,7 @@ exports.createSubDoc = function(req, res) {
                 
                 // inform other users that sub doc is generated
                 newSubDoc.generatedByUser = req.session.currentUser;
-                io.sockets.volatile.emit("addedSubDoc", JSON.stringify(newSubDoc));
+                global.io.sockets.volatile.emit("addedSubDoc", JSON.stringify(newSubDoc));
 
                 
                 
@@ -709,7 +712,7 @@ exports.shareAccess = function(req, res) {
             // let the recipient of the message know that he has a new
             // message
 
-            io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
+            global.io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
 
 
             // send response back to the client
@@ -819,7 +822,7 @@ exports.requestAccess = function(req, res) {
                     newMessage.save();
 
                     // alert users that are logged in about message
-                    io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
+                    global.io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
 
                 }
                 response.infos.push("Sent a 'Request More Privileges' message to all the users who have share access to the document, " + options.docName);
@@ -964,7 +967,7 @@ exports.grantAccess = function(req, res) {
                     }
                     // response.reloadDocs = true;
                     newUserDocument.forUser = req.body.userToGrant;
-                    io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
+                    global.io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
                     res.json(response);
 
                 });
@@ -1134,7 +1137,7 @@ exports.servePDF = function(req, res) {
         forDocument: projectId
         }, function(err, doc) {
         if (err || !doc) {
-            req.flash("error", "PDF not found or an error occured while reading the pdf");
+            req.session.errorMessage = "PDF not found or an error occured while reading the pdf";
             res.redirect("back");
             return;
         }
@@ -1356,7 +1359,7 @@ exports.openDocument = function(req, res) {
     // first retrieve the name of the document
     Document.findOne({_id:documentId}, function(err, doc) {
 	if (err || !doc) {
-	    req.flash("error", "An Error Occured while trying to open the document");
+        req.session.errorMessage = "An Error Occured while trying to open the document";
 	    res.redirect('back');
         console.log("error");
         console.log(err);
@@ -1470,7 +1473,7 @@ exports.saveDocument = function(req, res) {
         };
 
         // send a message to all users that are currently viewing the saved doc
-        io.sockets.volatile.emit("savedDocument", JSON.stringify(savedDocMessage));
+        global.io.sockets.volatile.emit("savedDocument", JSON.stringify(savedDocMessage));
 
         // after save
         response.code = 200;

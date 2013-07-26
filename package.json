@@ -1,14 +1,17 @@
 {
-    "name": "fly-latex"
-  , "version": "0.5.0"
-  , "dependencies": {
-      "express" : "2.5.x"
-      , "mongoose" : "2.6.x"
-      , "share" : "0.5.x"
-      , "socket.io" : "0.9.x"
-      , "temp" : "0.4.x"
-      ,"connect-mongo" : "0.1.x"
-      , "ejs" : "0.8.x"
-      , "fs-extra" : "0.x.x"
+  "name": "fly-latex",
+  "version": "0.5.0",
+  "dependencies": {
+    "express": "3.x",
+    "mongoose": "2.6.x",
+    "share": "0.5.x",
+    "socket.io": "0.9.x",
+    "temp": "0.4.x",
+    "connect-mongo": "0.1.x",
+    "fs-extra": "0.x.x",
+    "ejs-locals": "1.0.x"
+  },
+  "devDependencies": {
+    "express-debug": "~1.0.3"
   }
 }

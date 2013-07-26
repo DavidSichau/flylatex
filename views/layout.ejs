@@ -90,7 +90,7 @@
 
     <div class="container second-container">
       <!-- display single info message here -->
-      <% if (typeof info.length !== "undefined" && info != "")  { %>
+      <% if (typeof info !== "undefined" && info != "")  { %>
       <div class="alert alert-info">
 	<button class="close" data-dismiss="alert">x</button>
 	<%= info %>
@@ -99,7 +99,7 @@
       <!-- end of display of single info message here -->
       
       <!-- display single error message here -->
-      <% if (typeof error.length !== "undefined" && error != "")  { %>
+      <% if (typeof error !== "undefined" && error != "")  { %>
       <div class="alert alert-error">
 	<button class="close" data-dismiss="alert">x</button>
 	<%= error %>
