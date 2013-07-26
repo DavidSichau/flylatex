@@ -253,7 +253,7 @@ exports.processSignUpData = function(req, res) {
                     }
                     // redirect to home page with user
                     // logged in and ready to rumble!
-                    res.redirect("home");
+                    res.redirect("/");
                 });
 
             }
