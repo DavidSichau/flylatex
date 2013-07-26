@@ -43,7 +43,6 @@ var helpers = require("./routes_lib/helpers.js");
 exports.index = require("./routes_lib/index.js").index;
 exports.logOutUser = require("./routes_lib/logout.js").logOutUser;
 exports.displaySignUpForm = require("./routes_lib/displaysignup.js").displaySignUpForm;
-exports.addNewDocument = require("./routes_lib/addnewdocument.js").addNewDocument;
 
 
 
@@ -948,10 +947,7 @@ exports.grantAccess = function(req, res) {
                     newUserDocument.forUser = req.body.userToGrant;
                     global.io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
                     res.json(response);
-
                 });
-                
-
             }); 
         }
     });

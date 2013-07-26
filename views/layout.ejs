@@ -72,18 +72,34 @@
 	  
 	  <% if (typeof currentUser != "undefined" && typeof isLoggedIn != "undefined") { %>
 	    <% if (currentUser && isLoggedIn) { %>
-	    <div class="welcome-message pull-right">
-	      <strong>Welcome, </strong><span id="current-user-name"><%= currentUser %></span><a href="javascript:user_manager.logout();"> Logout</a>
-	    </div>
+
+        <ul class="nav pull-right">
+            <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-labelledby="dLabel">
+                <span   id="current-user-name"><%= currentUser %></span>
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a></li>
+                <li class="divider"></li> 
+                <li><a href="javascript:user_manager.logout();"> Logout</a></li>
+            </ul>
+            </li>
+        </ul> 
+        <div class="welcome-message pull-right">
+	        <strong>Welcome, </strong>
+        </div>
+                
+          
 	    <% } %>
-	  <% } else { %>
-	  <form action="/" class="pull-right" method="post">
-	    <input name="username" class="input-small" type="text" placeholder="Username"/>
-	    <input name="password" class="input-small" type="password" placeholder="Password"/>
-	    <button class="btn" type="submit">Sign In</button>
-	  </form>
-	  <button onclick="document.location.href='/signup'" class="sign-up btn btn-success pull-right" type="submit">Sign Up</button>
-	  <% } %>
+	    <% } else { %>
+    	  <form action="/" class="form-inline pull-right" method="post">
+    	    <input name="username" class="input-small" type="text" placeholder="Username"/>
+    	    <input name="password" class="input-small" type="password" placeholder="Password"/>
+    	    <button class="btn" type="submit">Sign In</button>
+    	  </form>
+    	  <button onclick="document.location.href='/signup'" class="sign-up btn btn-success pull-right" type="submit">Sign Up</button>
+	    <% } %>
         </div><!-- /container -->
       </div>
     </div>

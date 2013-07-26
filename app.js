@@ -101,9 +101,6 @@ app.post('/grantaccess', routes.isUserLoggedIn, routes.grantAccess);
 // for accepting invitation to have access to a document
 app.post('/acceptaccess', routes.isUserLoggedIn, routes.acceptAccess);
 
-// add a new document to my list of sessions
-app.post('/adddoctosession', routes.isUserLoggedIn, routes.addNewDocument);
-
 // reload the documents in the session of the current user
 app.post('/reloadsession', routes.isUserLoggedIn, routes.reloadSession);
 

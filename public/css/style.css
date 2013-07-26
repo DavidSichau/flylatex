@@ -39,6 +39,10 @@ form.pull-right {
     color: white;
 }
 
+#current-user-name {
+    color: white;    
+}
+
 footer {
     border-top-style: solid;
     border-top-width: 2px;
