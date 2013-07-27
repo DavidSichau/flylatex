@@ -14,14 +14,14 @@ function UserManager() {
     /*
      * logs user out
      */
-    this.logout = function()  {
-	$.ajax({
-	    type: "DELETE"
-	    , url: "/"
-	    , success: function(response) {
-		reloadHome();
-	    }
-	});
+    this.logout = function() {
+        $.ajax({
+            type: "DELETE",
+            url: "/logout",
+            success: function(response) {
+                reloadHome();
+            }
+        });
     };
 }
 

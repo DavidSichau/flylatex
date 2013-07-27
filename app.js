@@ -33,7 +33,7 @@ app.configure(function(){
     app.use(express.methodOverride());
     app.use(express.cookieParser());
     app.use(express.session({
-	    secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
+        secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
         store: new MongoStore(configs.db),
         maxAge: 24 * 60 * 60 * 1000// max age of session is one day
     }));
@@ -67,9 +67,12 @@ sharejs.attach(app, sharejsOptions);
 /**
  * Routes
  */
-app.post('/', routes.preIndex, routes.index); 
-app.get('/', routes.preIndex, routes.index);
-app.del('/', routes.logOutUser, routes.index);
+//if this line is missing errors occure
+app.post('/', routes.index, routes.index); 
+app.get('/',  routes.index);
+
+app.post('/login', routes.login);
+app.del('/logout', routes.logOutUser, routes.index);
 
 // for signing up on site
 app.get('/signup', routes.displaySignUpForm);

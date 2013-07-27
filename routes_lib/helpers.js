@@ -165,20 +165,7 @@ var getPrivileges = function(accessCount) {
 }
 
 
-/*
- * Helper function
- * displayErrorsForSignUp
-*/
-var displayErrorsForSignUp = function(res, errors) {
-    res.render("sign-up",
-	       {title: "Sign Up for Fly Latex"
-		, shortTitle: "Sign Up"
-		, tagLine: "Start Editing Documents with Your Peeps!"
-		, fileSpecificStyle: "sign-up.css"
-		, fileSpecificScript: "application.js"
-		, errors: errors
-	       });
-};
+
 
 /**
  * searchForDocsInSession
@@ -361,7 +348,6 @@ exports.compilePdf = compilePdf;
 exports.cloneObject = cloneObject;
 exports.loadUser = loadUser;
 exports.loadProject = loadProject;
-exports.displayErrorsForSignUp = displayErrorsForSignUp;
 exports.searchForDocsInSession = searchForDocsInSession;
 exports.createNewDocument = createNewDocument;
 exports.createNewProject= createNewProject;

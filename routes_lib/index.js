@@ -7,11 +7,12 @@
  *
  */
 exports.index = function(req, res, err) {
-    req.session.currentUser = (req.session.currentUser == undefined ? "" : req.session.currentUser);
+    
+    req.session.currentUser = (typeof req.session.currentUser == 'undefined' ? "" : req.session.currentUser);
 
-    req.session.isLoggedIn = (req.session.isLoggedIn == undefined ? false : req.session.isLoggedIn);
+    req.session.isLoggedIn = (typeof req.session.isLoggedIn == 'undefined' ? false : req.session.isLoggedIn);
 
-    req.session.userDocuments = (req.session.userDocuments == undefined ? [] : req.session.userDocuments);
+    req.session.userDocuments = (typeof req.session.userDocuments == 'undefined' ? [] : req.session.userDocuments);
     
     // delete the session such that after an reload the messages are deleted
     var errorMessage = req.session.errorMessage;
