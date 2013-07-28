@@ -5,6 +5,9 @@
     <div class="span8">
         <ul class="nav nav-tabs">
             <li class="active">
+                <a href="#account" data-toggle="tab">Account Information</a>
+            </li>
+            <li>
                 <a href="#changePassword" data-toggle="tab">change Password</a>
             </li>
             <li>
@@ -12,7 +15,13 @@
             </li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane active" id="changePassword">
+            <div class="tab-pane active form-horizontal" id="account">
+                <div class="control-group"><label class="control-label">User Name:</label> <div class="controls"><span class="input-xlarge uneditable-input"><%= currentUser %></span> </div></div>
+                <div class="control-group"><label class="control-label">First Name:</label> <div class="controls"><span class="input-xlarge uneditable-input"><%= firstName %></span> </div></div>
+                <div class="control-group"><label class="control-label">Last Name:</label> <div class="controls"><span class="input-xlarge uneditable-input"><%= lastName %></span> </div></div>
+                <div class="control-group"><label class="control-label">Email:</label> <div class="controls"><span class="input-xlarge  uneditable-input"> <%= email %></span></div></div>
+            </div>
+            <div class="tab-pane" id="changePassword">
                 <form action="/accountSettings" method="post" class="form-horizontal">
                     <fieldset>
                         <div class="control-group">
@@ -49,7 +58,7 @@
                             <label class="control-label" for="focusedInput">New Email*</label>
                             <div class="controls">
                                 <input name="user[email]" class="input-xlarge focused" id="focusedInput"
-                                type="text" placeholder="Enter Email here" />
+                                type="text" placeholder="Enter new Email here" />
                             </div>
                         </div>
                         <div class="form-actions">
