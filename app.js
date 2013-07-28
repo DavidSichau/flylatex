@@ -78,6 +78,9 @@ app.del('/logout', routes.logOutUser, routes.index);
 app.get('/signup', routes.displaySignUpForm);
 app.post('/signup', routes.processSignUpData);
 
+app.get('/accountSettings', routes.isUserLoggedIn, routes.displayAccountSettings)
+app.post('/accountSettings', routes.isUserLoggedIn, routes.processAccountSettings)
+
 // for creating a new document
 app.put('/createdoc', routes.isUserLoggedIn, routes.createDoc);
 

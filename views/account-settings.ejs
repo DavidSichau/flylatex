@@ -1,0 +1,68 @@
+<div class="sign-up-form">
+    <h2>
+        <%=title %>
+    </h2>
+    <div class="span8">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#changePassword" data-toggle="tab">change Password</a>
+            </li>
+            <li>
+                <a href="#email" data-toggle="tab">change Email</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="changePassword">
+                <form action="/accountSettings" method="post" class="form-horizontal">
+                    <fieldset>
+                        <div class="control-group">
+                            <label class="control-label" for="focusedInput">Old Password*</label>
+                            <div class="controls">
+                                <input class="input-xlarge focused" id="focusedInput" type="password" name="user[oldPassword]"
+                                placeholder="Enter old Password here" />
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="focusedInput">New Password*</label>
+                            <div class="controls">
+                                <input class="input-xlarge focused" id="focusedInput" type="password"
+                                name="user[password]" placeholder="Enter new Password here" />
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="focusedInput">Confirm new Password*</label>
+                            <div class="controls">
+                                <input class="input-xlarge focused" id="focusedInput" type="password"
+                                name="user[confirmPassword]" placeholder="Confirm new Password here" />
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+    	            </div>
+                </form>
+            </div>
+            <div class="tab-pane" id="email">
+                <form action="/accountSettings" method="post" class="form-horizontal">
+                    <fieldset>
+                        <div class="control-group">
+                            <label class="control-label" for="focusedInput">New Email*</label>
+                            <div class="controls">
+                                <input name="user[email]" class="input-xlarge focused" id="focusedInput"
+                                type="text" placeholder="Enter Email here" />
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Change Email</button>
+                        </div>
+                    </fieldset>
+                </form>
+                
+            </div>
+        </div>
+
+
+    
+    
+    </div>
+</div>

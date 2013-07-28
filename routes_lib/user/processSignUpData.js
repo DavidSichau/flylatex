@@ -70,7 +70,7 @@ exports.processSignUpData = function(req, res) {
                 errors["userNameTaken"] = "The username " + newUser.userName + " is already taken";
                 isError = true;
 
-                helpers.displayErrorsForSignUp(res, errors);
+                    displayErrorsForSignUp(res, errors);
             }
             else {
                 // save the user
@@ -104,8 +104,8 @@ exports.processSignUpData = function(req, res) {
         });
     } else {
 	// there's an error. Return error message(s) to user
-	helpers.displayErrorsForSignUp(res, errors);
-    }
+	    displayErrorsForSignUp(res, errors);
+	}
 };
 
 /*

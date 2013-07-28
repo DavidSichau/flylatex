@@ -48,6 +48,9 @@ exports.processSignUpData = require("./routes_lib/user/processSignUpData.js").pr
 exports.login = require("./routes_lib/user/login");
 exports.logOutUser = require("./routes_lib/user/logout.js");
 
+exports.displayAccountSettings = require("./routes_lib/user/displayAccountSetting.js");
+exports.processAccountSettings = require("./routes_lib/user/processAccountSetting.js");
+
 
 
 // ================ GLOBAL variables here =============
@@ -114,62 +117,6 @@ exports.preIndex = function(req, res, next) {
         console.log("blub");
         next();
     }
-    /*else if (req.body.username && req.body.username.length > 0 && req.body.password && req.body.password.length > 0) {
-
-        // user's not logged in, but wants to log in
-        User.findOne({
-            userName: req.body.username
-        }, function(err, user) {
-            if (err) {
-                console.log("error: ");
-                console.log(err);
-                req.session.currentUser = null;
-                req.session.isLoggedIn = false;
-                next();
-                return;
-            }
-
-            if (!user || typeof user.authenticate != "function") {
-                // is user even in db ? 
-                req.session.errorMessage = "There's no user called " + req.body.username + " in our database";
-                res.redirect('back');
-                return;
-            }
-            else if (!user.authenticate(req.body.password)) {
-                // user's password incorrect
-                req.session.errorMessage = "Password does not match Username entered";
-                res.redirect('back');
-                return;
-            }
-            else {
-                // authenticate user against password entered
-                console.log("==========user successfully logged in========");
-                console.log(user);
-                console.log("=============================================");
-
-                // user authenticated! Can go in
-                helpers.loadUser(user, function(err, loadedUser) {
-                    console.log("loaded user " + loadedUser.currentUser)
-                    for (var key in loadedUser) {
-                        req.session[key] = loadedUser[key];
-                    }
-
-                    next();
-
-                });
-            }
-        });
-    }
-    else {
-        // user's trying to log in, but didn't enter both username
-        // and password
-        if (!(req.body.username && req.body.password)) {
-            req.session.infoMessage =  "Enter both a username and password";
-            res.redirect('back');
-            return;
-        }
-    }
-    */
 };
 
 
